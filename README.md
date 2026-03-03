@@ -59,6 +59,30 @@ Then open:
 - `POST http://localhost:8080/api/contact` (backend endpoint)
 - `POST http://localhost:8080/api/appointments` (Google Meet appointment endpoint)
 
+## Frontend API Routing (Important)
+
+If your frontend is deployed separately from the Go API, the form requests will 404 unless the API base is configured.
+
+Set one of these:
+
+1. `index.html` meta tag:
+
+```html
+<meta name="api-base-url" content="https://api.nexgenautomations.net">
+```
+
+2. Global window override before loading the main JS:
+
+```html
+<script>window.__API_BASE_URL__ = "https://api.nexgenautomations.net";</script>
+```
+
+Fallback behavior:
+
+- The frontend first uses configured API base (if set).
+- It then tries `https://api.<current-hostname>` automatically.
+- Finally it falls back to same-origin paths (`/api/contact`, `/contact`, etc.).
+
 ## 3. API Contract
 
 `POST /api/contact`

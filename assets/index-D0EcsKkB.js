@@ -350,15 +350,38 @@ const configuredApiBase = (() => {
   return (windowValue || metaValue).trim().replace(/\/+$/, "");
 })();
 
+const inferredApiBases = (() => {
+  if (typeof window === "undefined" || !window.location) {
+    return [];
+  }
+
+  const { hostname, protocol } = window.location;
+  if (!hostname || hostname === "localhost" || /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) {
+    return [];
+  }
+
+  const secureProtocol = protocol === "https:" ? "https:" : "http:";
+  const bases = [];
+
+  if (!hostname.startsWith("api.")) {
+    bases.push(`${secureProtocol}//api.${hostname}`);
+  }
+
+  return bases;
+})();
+
 const buildApiCandidates = (path) => {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const candidates = [];
+  const apiBases = configuredApiBase
+    ? [configuredApiBase, ...inferredApiBases]
+    : inferredApiBases;
 
-  if (configuredApiBase) {
-    candidates.push(`${configuredApiBase}${normalizedPath}`);
+  for (const apiBase of apiBases) {
+    candidates.push(`${apiBase}${normalizedPath}`);
     if (normalizedPath.startsWith("/api/")) {
       candidates.push(
-        `${configuredApiBase}${normalizedPath.replace(/^\/api/, "")}`
+        `${apiBase}${normalizedPath.replace(/^\/api/, "")}`
       );
     }
   }
