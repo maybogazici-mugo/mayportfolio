@@ -380,7 +380,16 @@ func validateAppointmentRequest(cfg config, req appointmentRequest) (time.Time, 
 
 	location, err := time.LoadLocation(timezone)
 	if err != nil {
-		return time.Time{}, time.Time{}, "", errors.New("invalid timezone")
+		fallback := strings.TrimSpace(cfg.DefaultMeetingTimezone)
+		if fallback == "" {
+			fallback = "UTC"
+		}
+		location, err = time.LoadLocation(fallback)
+		if err != nil {
+			location = time.UTC
+			fallback = "UTC"
+		}
+		timezone = fallback
 	}
 
 	startAt, err := time.ParseInLocation("2006-01-02T15:04", startAtRaw, location)
