@@ -9,3 +9,7 @@ mayportfolio
 
 # Local Google service account key
 n8n-youtube-486611-fada23b323d0.json
+
+# secrets
+n8n-488311-c9b8ba73e569.json
+*.json:Zone.Identifier
