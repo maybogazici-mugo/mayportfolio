@@ -12,7 +12,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/server .
 FROM alpine:3.21
 WORKDIR /app
 
-RUN adduser -D -H -u 10001 appuser
+RUN addgroup -S appuser && adduser -S -G appuser -u 10001 appuser
 
 COPY --from=builder /app/server /app/server
 COPY index.html /app/index.html
