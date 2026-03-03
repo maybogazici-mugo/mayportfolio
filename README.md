@@ -34,6 +34,7 @@ export WORKING_HOUR_END=18
 Notes:
 
 - `CONTACT_FROM_EMAIL` defaults to `SMTP_USERNAME` if omitted.
+- `ALLOWED_ORIGIN` can be a single origin or comma-separated list (example: `https://nexgenautomations.net,https://www.nexgenautomations.net`).
 - Alternate env names are also accepted for deployments that use different keys:
   - `MAIL_HOST` for `SMTP_HOST`
   - `MAIL_PORT` for `SMTP_PORT`

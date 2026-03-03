@@ -88,9 +88,11 @@ func main() {
 	mux.HandleFunc("/appointments", appointmentHandler(cfg))
 	mux.Handle("/", http.FileServer(http.Dir(".")))
 
+	handler := withCORS(mux, cfg.AllowedOrigin)
+
 	addr := ":" + cfg.Port
 	log.Printf("server listening on http://localhost%s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	if err := http.ListenAndServe(addr, handler); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
 }
@@ -669,16 +671,45 @@ func sendSMTP(cfg config, msg []byte) error {
 }
 
 func setCORSHeaders(w http.ResponseWriter, r *http.Request, allowedOrigin string) {
-	origin := "*"
-	if allowedOrigin != "" {
-		origin = allowedOrigin
-	}
-
-	if r.Header.Get("Origin") != "" {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
+	origin := strings.TrimSpace(r.Header.Get("Origin"))
+	allowed := resolveAllowedOrigin(origin, allowedOrigin)
+	if allowed != "" {
+		w.Header().Set("Access-Control-Allow-Origin", allowed)
+		w.Header().Set("Vary", "Origin")
 	}
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+}
+
+func withCORS(next http.Handler, allowedOrigin string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		setCORSHeaders(w, r, allowedOrigin)
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func resolveAllowedOrigin(requestOrigin, allowedOriginEnv string) string {
+	requestOrigin = strings.TrimSpace(requestOrigin)
+	if requestOrigin == "" {
+		return ""
+	}
+
+	allowedOriginEnv = strings.TrimSpace(allowedOriginEnv)
+	if allowedOriginEnv == "" || allowedOriginEnv == "*" {
+		return "*"
+	}
+
+	for _, candidate := range strings.Split(allowedOriginEnv, ",") {
+		if strings.EqualFold(strings.TrimSpace(candidate), requestOrigin) {
+			return requestOrigin
+		}
+	}
+
+	return ""
 }
 
 func getEnv(key, fallback string) string {
