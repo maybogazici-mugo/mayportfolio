@@ -651,7 +651,8 @@ if (contactForm) {
       button.disabled = true;
     }
 
-    const recipient = "maybogazici@gmail.com";
+    const recipient =
+      contactForm.getAttribute("data-mail-target") || "maybogazici@gmail.com";
     const subject = `${t.emailSubjectPrefix} - ${name}`;
     const body = [
       `${t.emailBodyName}: ${name}`,
@@ -662,11 +663,17 @@ if (contactForm) {
       message || t.noMessage,
     ].join("\n");
 
-    const mailtoUrl = `mailto:${recipient}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body)}`;
+    const encodedSubject = encodeURIComponent(subject);
+    const encodedBody = encodeURIComponent(body);
+    const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+      recipient
+    )}&su=${encodedSubject}&body=${encodedBody}`;
+    const mailtoUrl = `mailto:${recipient}?subject=${encodedSubject}&body=${encodedBody}`;
 
-    window.location.href = mailtoUrl;
+    const popup = window.open(gmailComposeUrl, "_blank", "noopener,noreferrer");
+    if (!popup) {
+      window.location.href = mailtoUrl;
+    }
 
     setTimeout(() => {
       if (button) {
