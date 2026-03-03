@@ -6,3 +6,6 @@ mayportfolio
 
 # Local env files
 .env
+
+# Local Google service account key
+n8n-youtube-486611-fada23b323d0.json
