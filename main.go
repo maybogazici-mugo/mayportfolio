@@ -81,7 +81,9 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", healthHandler)
 	mux.HandleFunc("/api/contact", contactHandler(cfg))
+	mux.HandleFunc("/contact", contactHandler(cfg))
 	mux.HandleFunc("/api/appointments", appointmentHandler(cfg))
+	mux.HandleFunc("/appointments", appointmentHandler(cfg))
 	mux.Handle("/", http.FileServer(http.Dir(".")))
 
 	addr := ":" + cfg.Port
@@ -92,20 +94,21 @@ func main() {
 }
 
 func loadConfig() (config, error) {
-	smtpPort, err := strconv.Atoi(getEnv("SMTP_PORT", "587"))
+	smtpPortRaw := getEnvFromKeys([]string{"SMTP_PORT", "MAIL_PORT"}, "587")
+	smtpPort, err := strconv.Atoi(smtpPortRaw)
 	if err != nil {
 		return config{}, fmt.Errorf("SMTP_PORT must be a number: %w", err)
 	}
 
 	cfg := config{
 		Port:                   getEnv("PORT", "8080"),
-		SMTPHost:               os.Getenv("SMTP_HOST"),
+		SMTPHost:               firstNonEmptyEnv("SMTP_HOST", "MAIL_HOST"),
 		SMTPPort:               smtpPort,
-		SMTPUsername:           os.Getenv("SMTP_USERNAME"),
-		SMTPPassword:           os.Getenv("SMTP_PASSWORD"),
-		ToEmail:                os.Getenv("CONTACT_TO_EMAIL"),
-		FromEmail:              os.Getenv("CONTACT_FROM_EMAIL"),
-		AllowedOrigin:          os.Getenv("ALLOWED_ORIGIN"),
+		SMTPUsername:           firstNonEmptyEnv("SMTP_USERNAME", "SMTP_USER", "MAIL_USERNAME", "MAIL_USER"),
+		SMTPPassword:           firstNonEmptyEnv("SMTP_PASSWORD", "SMTP_PASS", "MAIL_PASSWORD", "MAIL_PASS"),
+		ToEmail:                firstNonEmptyEnv("CONTACT_TO_EMAIL", "CONTACT_EMAIL", "TO_EMAIL"),
+		FromEmail:              firstNonEmptyEnv("CONTACT_FROM_EMAIL", "FROM_EMAIL"),
+		AllowedOrigin:          firstNonEmptyEnv("ALLOWED_ORIGIN", "CORS_ALLOWED_ORIGIN"),
 		RequestTimeout:         10 * time.Second,
 		GoogleCalendarID:       os.Getenv("GOOGLE_CALENDAR_ID"),
 		GoogleCredentialsJSON:  os.Getenv("GOOGLE_SERVICE_ACCOUNT_JSON"),
@@ -188,6 +191,9 @@ func contactHandler(cfg config) http.HandlerFunc {
 			http.Error(w, "failed to send message", http.StatusInternalServerError)
 			return
 		}
+		if err := sendContactAcknowledgementEmail(ctx, cfg, req); err != nil {
+			log.Printf("contact acknowledgement send failed: %v", err)
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(apiResponse{Message: "Message sent"})
@@ -242,6 +248,9 @@ func appointmentHandler(cfg config) http.HandlerFunc {
 			http.Error(w, "failed to create meeting", http.StatusInternalServerError)
 			return
 		}
+		if err := sendAppointmentConfirmationEmail(ctx, cfg, req, createdEvent); err != nil {
+			log.Printf("appointment confirmation send failed: %v", err)
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(appointmentResponse{
@@ -295,6 +304,39 @@ func sendContactEmail(ctx context.Context, cfg config, req contactRequest) error
 		fmt.Sprintf("From: %s", cfg.FromEmail),
 		fmt.Sprintf("To: %s", cfg.ToEmail),
 		fmt.Sprintf("Reply-To: %s", req.Email),
+		fmt.Sprintf("Subject: %s", subject),
+		"MIME-Version: 1.0",
+		"Content-Type: text/plain; charset=UTF-8",
+		"",
+		body,
+	}, "\r\n")
+
+	errChan := make(chan error, 1)
+	go func() {
+		errChan <- sendSMTP(cfg, []byte(msg))
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-errChan:
+		return err
+	}
+}
+
+func sendContactAcknowledgementEmail(ctx context.Context, cfg config, req contactRequest) error {
+	subject := "We received your message"
+	body := fmt.Sprintf(
+		"Hi %s,\r\n\r\nThanks for contacting us. We received your request and will get back to you shortly.\r\n\r\nService: %s\r\nMessage:\r\n%s\r\n",
+		req.Name,
+		req.Service,
+		req.Message,
+	)
+
+	msg := strings.Join([]string{
+		fmt.Sprintf("From: %s", cfg.FromEmail),
+		fmt.Sprintf("To: %s", req.Email),
+		fmt.Sprintf("Reply-To: %s", cfg.ToEmail),
 		fmt.Sprintf("Subject: %s", subject),
 		"MIME-Version: 1.0",
 		"Content-Type: text/plain; charset=UTF-8",
@@ -460,6 +502,71 @@ func createMeetEvent(
 		Do()
 }
 
+func sendAppointmentConfirmationEmail(
+	ctx context.Context,
+	cfg config,
+	req appointmentRequest,
+	event *calendar.Event,
+) error {
+	if event == nil {
+		return errors.New("appointment confirmation requires event details")
+	}
+
+	meetLink := strings.TrimSpace(event.HangoutLink)
+	if meetLink == "" && event.ConferenceData != nil && len(event.ConferenceData.EntryPoints) > 0 {
+		for _, entry := range event.ConferenceData.EntryPoints {
+			if entry == nil {
+				continue
+			}
+			if entry.EntryPointType == "video" && strings.TrimSpace(entry.Uri) != "" {
+				meetLink = entry.Uri
+				break
+			}
+		}
+	}
+
+	startAt := ""
+	if event.Start != nil {
+		startAt = strings.TrimSpace(event.Start.DateTime)
+	}
+	endAt := ""
+	if event.End != nil {
+		endAt = strings.TrimSpace(event.End.DateTime)
+	}
+
+	subject := "Your appointment is confirmed"
+	body := fmt.Sprintf(
+		"Hi %s,\r\n\r\nYour appointment is confirmed.\r\n\r\nStart: %s\r\nEnd: %s\r\nMeet Link: %s\r\n\r\nIf you need changes, reply to this email.\r\n",
+		strings.TrimSpace(req.Name),
+		startAt,
+		endAt,
+		meetLink,
+	)
+
+	msg := strings.Join([]string{
+		fmt.Sprintf("From: %s", cfg.FromEmail),
+		fmt.Sprintf("To: %s", strings.TrimSpace(req.Email)),
+		fmt.Sprintf("Reply-To: %s", cfg.ToEmail),
+		fmt.Sprintf("Subject: %s", subject),
+		"MIME-Version: 1.0",
+		"Content-Type: text/plain; charset=UTF-8",
+		"",
+		body,
+	}, "\r\n")
+
+	errChan := make(chan error, 1)
+	go func() {
+		errChan <- sendSMTP(cfg, []byte(msg))
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-errChan:
+		return err
+	}
+}
+
 func newCalendarService(ctx context.Context, cfg config) (*calendar.Service, error) {
 	credsJSON := []byte(cfg.GoogleCredentialsJSON)
 	if len(credsJSON) == 0 {
@@ -577,4 +684,20 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func getEnvFromKeys(keys []string, fallback string) string {
+	if value := firstNonEmptyEnv(keys...); value != "" {
+		return value
+	}
+	return fallback
+}
+
+func firstNonEmptyEnv(keys ...string) string {
+	for _, key := range keys {
+		if value := strings.TrimSpace(os.Getenv(key)); value != "" {
+			return value
+		}
+	}
+	return ""
 }

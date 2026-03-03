@@ -34,6 +34,14 @@ export WORKING_HOUR_END=18
 Notes:
 
 - `CONTACT_FROM_EMAIL` defaults to `SMTP_USERNAME` if omitted.
+- Alternate env names are also accepted for deployments that use different keys:
+  - `MAIL_HOST` for `SMTP_HOST`
+  - `MAIL_PORT` for `SMTP_PORT`
+  - `SMTP_USER` / `MAIL_USERNAME` / `MAIL_USER` for `SMTP_USERNAME`
+  - `SMTP_PASS` / `MAIL_PASSWORD` / `MAIL_PASS` for `SMTP_PASSWORD`
+  - `CONTACT_EMAIL` / `TO_EMAIL` for `CONTACT_TO_EMAIL`
+  - `FROM_EMAIL` for `CONTACT_FROM_EMAIL`
+  - `CORS_ALLOWED_ORIGIN` for `ALLOWED_ORIGIN`
 - Use SMTP app passwords/API keys where your provider requires them.
 - For Google Meet scheduling, share Muhammed's Google Calendar with the service account email as "Make changes to events".
 - `WORKING_DAYS` uses weekday numbers (`0=Sunday ... 6=Saturday`).
@@ -128,6 +136,7 @@ This project is ready for container deployment using the included [Dockerfile](/
    - `WORKING_DAYS` (example: `1,2,3,4,5`)
    - `WORKING_HOUR_START` (example: `9`)
    - `WORKING_HOUR_END` (example: `18`)
+   - Important: these must be set as runtime service environment variables (not only build-time variables).
 7. Deploy service.
 8. Attach your custom domain in Northflank.
 
