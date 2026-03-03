@@ -150,7 +150,15 @@ const translations = {
       message: "Mesajınız...",
     },
     selectPlaceholder: "İlgilendiğiniz Hizmet",
-    selectOptions: ["AI Asistan", "Chatbot", "YouTube Otomasyonu"],
+    selectOptions: [
+      "Kişisel AI Asistanı",
+      "Akıllı Chatbotlar",
+      "YouTube Otomasyonu",
+      "Geri Bildirim Analizi",
+      "AI Web Araştırmacısı",
+      "Sosyal Medya Otomasyonu",
+      "E-posta Otomasyonu",
+    ],
     contactSendButton: "Mesaj Gönder",
     footer: "© 2026 NexGen Automations. Tüm Hakları Saklıdır.",
     monthlySuffix: "/ay",
@@ -265,7 +273,15 @@ const translations = {
       message: "Your message...",
     },
     selectPlaceholder: "Service You Are Interested In",
-    selectOptions: ["AI Assistant", "Chatbot", "YouTube Automation"],
+    selectOptions: [
+      "Personal AI Assistant",
+      "Smart Chatbots",
+      "YouTube Automation",
+      "Feedback Analysis",
+      "AI Web Researcher",
+      "Social Media Automation",
+      "Email Automation",
+    ],
     contactSendButton: "Send Message",
     footer: "© 2026 NexGen Automations. All Rights Reserved.",
     monthlySuffix: "/mo",
@@ -500,16 +516,29 @@ const applyLanguage = (language) => {
   }
 
   if (selectInput) {
-    const options = selectInput.querySelectorAll("option");
-    if (options[0]) {
-      options[0].textContent = t.selectPlaceholder;
-    }
+    const previousValue = selectInput.value;
+    selectInput.innerHTML = "";
 
-    t.selectOptions.forEach((optionText, index) => {
-      if (options[index + 1]) {
-        options[index + 1].textContent = optionText;
-      }
+    const placeholderOption = document.createElement("option");
+    placeholderOption.value = "";
+    placeholderOption.textContent = t.selectPlaceholder;
+    selectInput.appendChild(placeholderOption);
+
+    t.selectOptions.forEach((optionText) => {
+      const option = document.createElement("option");
+      option.value = optionText;
+      option.textContent = optionText;
+      selectInput.appendChild(option);
     });
+
+    if (
+      previousValue &&
+      t.selectOptions.some((optionText) => optionText === previousValue)
+    ) {
+      selectInput.value = previousValue;
+    } else {
+      selectInput.value = "";
+    }
   }
 
   if (submitButton) {
