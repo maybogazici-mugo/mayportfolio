@@ -80,6 +80,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", healthHandler)
+	mux.HandleFunc("/health", healthHandler)
+	mux.HandleFunc("/healths", healthHandler)
 	mux.HandleFunc("/api/contact", contactHandler(cfg))
 	mux.HandleFunc("/contact", contactHandler(cfg))
 	mux.HandleFunc("/api/appointments", appointmentHandler(cfg))
