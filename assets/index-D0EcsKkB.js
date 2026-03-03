@@ -165,15 +165,13 @@ const translations = {
     yearlySuffix: "/ay*",
     toggleButtonLabel: "EN",
     toggleAria: "Dili İngilizceye çevir",
-    alertMissingNameEmail: "Lütfen ad ve e-posta bilgilerinizi doldurun.",
-    openingEmail: "E-posta uygulaması açılıyor...",
-    emailSubjectPrefix: "Yeni Talep",
-    serviceNotSpecified: "Belirtilmedi",
-    messageLabel: "Mesaj:",
-    noMessage: "(Mesaj girilmedi)",
-    emailBodyName: "Ad Soyad",
-    emailBodyEmail: "E-posta",
-    emailBodyService: "Hizmet",
+    alertMissingNameEmail:
+      "Lütfen ad, e-posta, hizmet ve mesaj alanlarını doldurun.",
+    openingEmail: "Mesajınız gönderiliyor...",
+    formSuccess:
+      "Mesajınız alındı. En kısa sürede size e-posta veya telefonla dönüş yapacağız.",
+    formError:
+      "Mesaj gönderilemedi. Lütfen kısa bir süre sonra tekrar deneyin.",
   },
   en: {
     metaTitle: "NexGen Automations | Automate the Future",
@@ -288,15 +286,12 @@ const translations = {
     yearlySuffix: "/mo*",
     toggleButtonLabel: "TR",
     toggleAria: "Switch language to Turkish",
-    alertMissingNameEmail: "Please provide your name and email.",
-    openingEmail: "Opening your email app...",
-    emailSubjectPrefix: "New Inquiry",
-    serviceNotSpecified: "Not specified",
-    messageLabel: "Message:",
-    noMessage: "(No message entered)",
-    emailBodyName: "Name",
-    emailBodyEmail: "Email",
-    emailBodyService: "Service",
+    alertMissingNameEmail:
+      "Please provide your name, email, service, and message.",
+    openingEmail: "Sending your message...",
+    formSuccess:
+      "Your message has been received. We will get back to you by email or phone shortly.",
+    formError: "Your message could not be sent. Please try again shortly.",
   },
 };
 
@@ -308,6 +303,7 @@ const dynamicTotal = document.querySelector("#dynamic-total");
 const billingToggle = document.querySelector("#billing-toggle");
 const languageToggle = document.querySelector("#language-toggle");
 const contactForm = document.querySelector(".contact-form");
+const meetingForm = document.querySelector("#meeting-form");
 
 let currentLanguage = "tr";
 
@@ -324,6 +320,23 @@ const setHtml = (selector, value) => {
     node.innerHTML = value;
   }
 };
+
+const meetingTexts = () =>
+  currentLanguage === "tr"
+    ? {
+        missing: "Lütfen ad, e-posta ve tarih/saat alanlarını doldurun.",
+        sending: "Randevu oluşturuluyor...",
+        success: "Toplantı oluşturuldu. Meet linkiniz aşağıda.",
+        error: "Toplantı oluşturulamadı. Lütfen tekrar deneyin.",
+        linkLabel: "Google Meet'e katıl",
+      }
+    : {
+        missing: "Please fill in name, email and date/time.",
+        sending: "Creating appointment...",
+        success: "Meeting created. Your Meet link is below.",
+        error: "Meeting could not be created. Please try again.",
+        linkLabel: "Join Google Meet",
+      };
 
 const formatTry = (value) => {
   const locale = currentLanguage === "tr" ? "tr-TR" : "en-US";
@@ -620,28 +633,25 @@ if (languageToggle) {
 }
 
 if (contactForm) {
-  contactForm.addEventListener("submit", (event) => {
+  contactForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const t = translations[currentLanguage];
     const button = contactForm.querySelector("button");
     const originalText = button ? button.innerText : t.contactSendButton;
+    const statusNode = document.querySelector("#contact-status");
 
     const nameInput = contactForm.querySelector('input[type="text"]');
     const emailInput = contactForm.querySelector('input[type="email"]');
-    const serviceSelect = contactForm.querySelector("select");
+    const serviceInput = contactForm.querySelector("select");
     const messageInput = contactForm.querySelector("textarea");
 
     const name = nameInput ? nameInput.value.trim() : "";
     const email = emailInput ? emailInput.value.trim() : "";
-    const service = serviceSelect ? serviceSelect.value : "";
-    const serviceLabel =
-      serviceSelect && serviceSelect.selectedIndex >= 0
-        ? serviceSelect.options[serviceSelect.selectedIndex].text
-        : t.serviceNotSpecified;
+    const service = serviceInput ? serviceInput.value.trim() : "";
     const message = messageInput ? messageInput.value.trim() : "";
 
-    if (!name || !email) {
+    if (!name || !email || !service || !message) {
       alert(t.alertMissingNameEmail);
       return;
     }
@@ -650,37 +660,145 @@ if (contactForm) {
       button.innerText = t.openingEmail;
       button.disabled = true;
     }
-
-    const recipient =
-      contactForm.getAttribute("data-mail-target") || "maybogazici@gmail.com";
-    const subject = `${t.emailSubjectPrefix} - ${name}`;
-    const body = [
-      `${t.emailBodyName}: ${name}`,
-      `${t.emailBodyEmail}: ${email}`,
-      `${t.emailBodyService}: ${service || t.serviceNotSpecified} (${serviceLabel})`,
-      "",
-      t.messageLabel,
-      message || t.noMessage,
-    ].join("\n");
-
-    const encodedSubject = encodeURIComponent(subject);
-    const encodedBody = encodeURIComponent(body);
-    const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
-      recipient
-    )}&su=${encodedSubject}&body=${encodedBody}`;
-    const mailtoUrl = `mailto:${recipient}?subject=${encodedSubject}&body=${encodedBody}`;
-
-    const popup = window.open(gmailComposeUrl, "_blank", "noopener,noreferrer");
-    if (!popup) {
-      window.location.href = mailtoUrl;
+    if (statusNode) {
+      statusNode.textContent = t.openingEmail;
     }
 
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          service,
+          message,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      if (statusNode) {
+        statusNode.textContent = t.formSuccess;
+      } else {
+        alert(t.formSuccess);
+      }
+      contactForm.reset();
+    } catch (error) {
+      if (statusNode) {
+        statusNode.textContent = t.formError;
+      } else {
+        alert(t.formError);
+      }
+    } finally {
       if (button) {
         button.innerText = originalText;
         button.disabled = false;
       }
-    }, 1200);
+    }
+  });
+}
+
+if (meetingForm) {
+  const startAtInput = meetingForm.querySelector('input[name="startAt"]');
+  if (startAtInput) {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 10);
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    startAtInput.min = local.toISOString().slice(0, 16);
+  }
+
+  meetingForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const t = meetingTexts();
+    const button = meetingForm.querySelector("button");
+    const originalText = button ? button.innerText : "";
+    const statusNode = document.querySelector("#meeting-status");
+    const linkNode = document.querySelector("#meeting-link-wrapper");
+
+    const nameInput = meetingForm.querySelector('input[name="name"]');
+    const emailInput = meetingForm.querySelector('input[name="email"]');
+    const startAtInput = meetingForm.querySelector('input[name="startAt"]');
+    const durationInput = meetingForm.querySelector('select[name="durationMinutes"]');
+    const notesInput = meetingForm.querySelector('textarea[name="notes"]');
+
+    const name = nameInput ? nameInput.value.trim() : "";
+    const email = emailInput ? emailInput.value.trim() : "";
+    const startAt = startAtInput ? startAtInput.value.trim() : "";
+    const durationMinutes = durationInput
+      ? parseInt(durationInput.value, 10)
+      : 30;
+    const notes = notesInput ? notesInput.value.trim() : "";
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    if (!name || !email || !startAt) {
+      if (statusNode) {
+        statusNode.textContent = t.missing;
+      } else {
+        alert(t.missing);
+      }
+      return;
+    }
+
+    if (button) {
+      button.innerText = t.sending;
+      button.disabled = true;
+    }
+    if (statusNode) {
+      statusNode.textContent = t.sending;
+    }
+    if (linkNode) {
+      linkNode.innerHTML = "";
+    }
+
+    try {
+      const response = await fetch("/api/appointments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          startAt,
+          durationMinutes,
+          notes,
+          timezone,
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = (await response.text()).trim();
+        throw new Error(errText || t.error);
+      }
+
+      const data = await response.json();
+      if (statusNode) {
+        statusNode.textContent = t.success;
+      }
+      if (linkNode && data.meetLink) {
+        linkNode.innerHTML = `<a href="${data.meetLink}" target="_blank" rel="noopener noreferrer">${t.linkLabel}</a>`;
+      }
+      meetingForm.reset();
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message ? error.message : t.error;
+      if (statusNode) {
+        statusNode.textContent = message;
+      } else {
+        alert(message);
+      }
+    } finally {
+      if (button) {
+        button.innerText = originalText;
+        button.disabled = false;
+      }
+    }
   });
 }
 

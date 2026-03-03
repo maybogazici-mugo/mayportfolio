@@ -201,14 +201,14 @@
                         <p>Projeniz hakkında detayları paylaşın, sizin için en iyi otomasyonu tasarlayalım.</p>
                         <ul class="contact-list">
                             <li>📍 Türkiye</li>
-                            <li>📧 <a href="mailto:maybogazici@gmail.com">maybogazici@gmail.com</a></li>
+                            <li>📧 <span class="contact-email">maybogazici@gmail.com</span></li>
                             <li>📞 +90 532 675 95 43</li>
                         </ul>
                     </div>
-                    <form class="contact-form" data-mail-target="maybogazici@gmail.com">
-                        <input type="text" placeholder="Adınız Soyadınız" required>
-                        <input type="email" placeholder="E-posta Adresiniz" required>
-                        <select>
+                    <form class="contact-form" id="contact-form" novalidate>
+                        <input type="text" name="name" placeholder="Adınız Soyadınız" autocomplete="name" required>
+                        <input type="email" name="email" placeholder="E-posta Adresiniz" autocomplete="email" required>
+                        <select name="service" required>
                             <option value="">İlgilendiğiniz Hizmet</option>
                             <option value="Kişisel AI Asistanı">Kişisel AI Asistanı</option>
                             <option value="Akıllı Chatbotlar">Akıllı Chatbotlar</option>
@@ -218,8 +218,39 @@
                             <option value="Sosyal Medya Otomasyonu">Sosyal Medya Otomasyonu</option>
                             <option value="E-posta Otomasyonu">E-posta Otomasyonu</option>
                         </select>
-                        <textarea placeholder="Mesajınız..." rows="5"></textarea>
+                        <textarea name="message" placeholder="Mesajınız..." rows="5" required></textarea>
+                        <p id="contact-status" aria-live="polite"></p>
                         <button type="submit" class="btn btn-primary full">Mesaj Gönder</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="meeting" class="contact">
+            <div class="container">
+                <div class="contact-box">
+                    <div class="contact-info">
+                        <h2>Google Meet Toplantısı Planla</h2>
+                        <p>Muhammed Aygümüş ile doğrudan takvime işlenen bir Google Meet randevusu oluşturun.</p>
+                        <ul class="contact-list">
+                            <li>🗓️ Müsait saatini seç</li>
+                            <li>📩 Davet e-postası otomatik gelir</li>
+                            <li>🎥 Google Meet linki anında oluşur</li>
+                        </ul>
+                    </div>
+                    <form class="contact-form" id="meeting-form" novalidate>
+                        <input type="text" name="name" placeholder="Adınız Soyadınız" autocomplete="name" required>
+                        <input type="email" name="email" placeholder="E-posta Adresiniz" autocomplete="email" required>
+                        <input type="datetime-local" name="startAt" required>
+                        <select name="durationMinutes" required>
+                            <option value="30">30 dakika</option>
+                            <option value="45">45 dakika</option>
+                            <option value="60">60 dakika</option>
+                        </select>
+                        <textarea name="notes" placeholder="Toplantı konusu / notlarınız..." rows="4"></textarea>
+                        <p id="meeting-status" aria-live="polite"></p>
+                        <p id="meeting-link-wrapper" aria-live="polite"></p>
+                        <button type="submit" class="btn btn-primary full">Google Meet Randevusu Al</button>
                     </form>
                 </div>
             </div>

@@ -1,0 +1,8 @@
+# Go build artifacts
+mayportfolio
+*.exe
+*.test
+*.out
+
+# Local env files
+.env
