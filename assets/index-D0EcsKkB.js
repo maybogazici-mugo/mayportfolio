@@ -338,6 +338,63 @@ const meetingTexts = () =>
         linkLabel: "Join Google Meet",
       };
 
+const configuredApiBase = (() => {
+  const metaNode = document.querySelector('meta[name="api-base-url"]');
+  const metaValue = metaNode ? metaNode.getAttribute("content") || "" : "";
+  const windowValue =
+    typeof window !== "undefined" &&
+    typeof window.__API_BASE_URL__ === "string"
+      ? window.__API_BASE_URL__
+      : "";
+
+  return (windowValue || metaValue).trim().replace(/\/+$/, "");
+})();
+
+const buildApiCandidates = (path) => {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const candidates = [];
+
+  if (configuredApiBase) {
+    candidates.push(`${configuredApiBase}${normalizedPath}`);
+    if (normalizedPath.startsWith("/api/")) {
+      candidates.push(
+        `${configuredApiBase}${normalizedPath.replace(/^\/api/, "")}`
+      );
+    }
+  }
+
+  candidates.push(normalizedPath);
+  if (normalizedPath.startsWith("/api/")) {
+    candidates.push(normalizedPath.replace(/^\/api/, ""));
+  }
+
+  return Array.from(new Set(candidates));
+};
+
+const fetchWithFallback = async (urls, options) => {
+  let lastResponse = null;
+  let lastError = null;
+
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, options);
+      if (response.status === 404) {
+        lastResponse = response;
+        continue;
+      }
+      return response;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (lastResponse) {
+    return lastResponse;
+  }
+
+  throw lastError || new Error("Network request failed");
+};
+
 const formatTry = (value) => {
   const locale = currentLanguage === "tr" ? "tr-TR" : "en-US";
   const formattedNumber = new Intl.NumberFormat(locale, {
@@ -665,18 +722,21 @@ if (contactForm) {
     }
 
     try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          service,
-          message,
-        }),
-      });
+      const response = await fetchWithFallback(
+        buildApiCandidates("/api/contact"),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            service,
+            message,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
@@ -757,20 +817,23 @@ if (meetingForm) {
     }
 
     try {
-      const response = await fetch("/api/appointments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          startAt,
-          durationMinutes,
-          notes,
-          timezone,
-        }),
-      });
+      const response = await fetchWithFallback(
+        buildApiCandidates("/api/appointments"),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            startAt,
+            durationMinutes,
+            notes,
+            timezone,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errText = (await response.text()).trim();
