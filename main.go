@@ -236,14 +236,20 @@ func appointmentHandler(cfg config) http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), cfg.RequestTimeout)
 		defer cancel()
 
-		if err := ensureAppointmentAvailability(ctx, cfg, startAt, endAt); err != nil {
-			if errors.Is(err, errSlotUnavailable) {
-				http.Error(w, err.Error(), http.StatusConflict)
-			} else {
-				log.Printf("availability check failed: %v", err)
-				http.Error(w, "failed to verify appointment availability", http.StatusInternalServerError)
-			}
-			return
+			if err := ensureAppointmentAvailability(ctx, cfg, startAt, endAt); err != nil {
+				if errors.Is(err, errSlotUnavailable) {
+					http.Error(w, err.Error(), http.StatusConflict)
+				} else if err.Error() == "meeting service is unavailable" {
+					log.Printf("availability check failed: %v", err)
+					http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				} else if err.Error() == "calendar availability could not be verified" || err.Error() == "calendar availability returned an error" {
+					log.Printf("availability check failed: %v", err)
+					http.Error(w, err.Error(), http.StatusBadGateway)
+				} else {
+					log.Printf("availability check failed: %v", err)
+					http.Error(w, "failed to verify appointment availability", http.StatusInternalServerError)
+				}
+				return
 		}
 
 		createdEvent, err := createMeetEvent(ctx, cfg, req, startAt, endAt, tz)
