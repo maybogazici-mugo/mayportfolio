@@ -242,7 +242,7 @@ func appointmentHandler(cfg config) http.HandlerFunc {
 				} else if err.Error() == "meeting service is unavailable" {
 					log.Printf("availability check failed: %v", err)
 					http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				} else if err.Error() == "calendar availability could not be verified" || err.Error() == "calendar availability returned an error" {
+				} else if err.Error() == "calendar availability could not be verified" || strings.HasPrefix(err.Error(), "calendar availability error:") {
 					log.Printf("availability check failed: %v", err)
 					http.Error(w, err.Error(), http.StatusBadGateway)
 				} else {
@@ -458,7 +458,26 @@ func ensureAppointmentAvailability(ctx context.Context, cfg config, startAt, end
 		return errors.New("calendar availability could not be verified")
 	}
 	if len(cal.Errors) > 0 {
-		return errors.New("calendar availability returned an error")
+		details := make([]string, 0, len(cal.Errors))
+		for _, apiErr := range cal.Errors {
+			if apiErr == nil {
+				continue
+			}
+			reason := strings.TrimSpace(apiErr.Reason)
+			domain := strings.TrimSpace(apiErr.Domain)
+			if reason == "" && domain == "" {
+				continue
+			}
+			if domain == "" {
+				details = append(details, reason)
+			} else {
+				details = append(details, fmt.Sprintf("%s:%s", domain, reason))
+			}
+		}
+		if len(details) == 0 {
+			return errors.New("calendar availability error: unknown")
+		}
+		return fmt.Errorf("calendar availability error: %s", strings.Join(details, ", "))
 	}
 	if len(cal.Busy) > 0 {
 		return errSlotUnavailable
