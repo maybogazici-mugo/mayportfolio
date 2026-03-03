@@ -374,7 +374,7 @@ const buildApiCandidates = (path) => {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const candidates = [];
   const apiBases = configuredApiBase
-    ? [configuredApiBase, ...inferredApiBases]
+    ? [configuredApiBase]
     : inferredApiBases;
 
   for (const apiBase of apiBases) {
@@ -384,6 +384,10 @@ const buildApiCandidates = (path) => {
         `${apiBase}${normalizedPath.replace(/^\/api/, "")}`
       );
     }
+  }
+
+  if (configuredApiBase) {
+    return Array.from(new Set(candidates));
   }
 
   candidates.push(normalizedPath);
