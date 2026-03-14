@@ -19,6 +19,7 @@ import (
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -255,7 +256,8 @@ func appointmentHandler(cfg config) http.HandlerFunc {
 		createdEvent, err := createMeetEvent(ctx, cfg, req, startAt, endAt, tz)
 		if err != nil {
 			log.Printf("appointment create failed: %v", err)
-			http.Error(w, "failed to create meeting", http.StatusInternalServerError)
+			status, message := classifyMeetingCreateError(err)
+			http.Error(w, message, status)
 			return
 		}
 		if err := sendAppointmentConfirmationEmail(ctx, cfg, req, createdEvent); err != nil {
@@ -323,7 +325,7 @@ func sendContactEmail(ctx context.Context, cfg config, req contactRequest) error
 
 	errChan := make(chan error, 1)
 	go func() {
-		errChan <- sendSMTP(cfg, []byte(msg))
+		errChan <- sendSMTP(cfg, []string{cfg.ToEmail}, []byte(msg))
 	}()
 
 	select {
@@ -356,7 +358,7 @@ func sendContactAcknowledgementEmail(ctx context.Context, cfg config, req contac
 
 	errChan := make(chan error, 1)
 	go func() {
-		errChan <- sendSMTP(cfg, []byte(msg))
+		errChan <- sendSMTP(cfg, []string{strings.TrimSpace(req.Email)}, []byte(msg))
 	}()
 
 	select {
@@ -504,7 +506,26 @@ func createMeetEvent(
 		notes = "No additional notes."
 	}
 
-	event := &calendar.Event{
+	event := buildCalendarEvent(req, startAt, endAt, timezone)
+
+	return svc.Events.
+		Insert(cfg.GoogleCalendarID, event).
+		ConferenceDataVersion(1).
+		Do()
+}
+
+func buildCalendarEvent(
+	req appointmentRequest,
+	startAt time.Time,
+	endAt time.Time,
+	timezone string,
+) *calendar.Event {
+	notes := strings.TrimSpace(req.Notes)
+	if notes == "" {
+		notes = "No additional notes."
+	}
+
+	return &calendar.Event{
 		Summary:     fmt.Sprintf("Google Meet appointment with %s", req.Name),
 		Description: fmt.Sprintf("Booked from website.\n\nName: %s\nEmail: %s\n\nNotes:\n%s", req.Name, req.Email, notes),
 		Start: &calendar.EventDateTime{
@@ -514,9 +535,6 @@ func createMeetEvent(
 		End: &calendar.EventDateTime{
 			DateTime: endAt.Format(time.RFC3339),
 			TimeZone: timezone,
-		},
-		Attendees: []*calendar.EventAttendee{
-			{Email: req.Email},
 		},
 		GuestsCanModify:         false,
 		GuestsCanInviteOthers:   boolPtr(false),
@@ -532,12 +550,6 @@ func createMeetEvent(
 			},
 		},
 	}
-
-	return svc.Events.
-		Insert(cfg.GoogleCalendarID, event).
-		ConferenceDataVersion(1).
-		SendUpdates("all").
-		Do()
 }
 
 func sendAppointmentConfirmationEmail(
@@ -583,7 +595,7 @@ func sendAppointmentConfirmationEmail(
 
 	errChan := make(chan error, 1)
 	go func() {
-		errChan <- sendSMTP(cfg, []byte(msg))
+		errChan <- sendSMTP(cfg, []string{strings.TrimSpace(req.Email)}, []byte(msg))
 	}()
 
 	select {
@@ -674,7 +686,26 @@ func conferenceRequestID() string {
 	return "meet-" + base64.RawURLEncoding.EncodeToString(buffer)
 }
 
-func sendSMTP(cfg config, msg []byte) error {
+func classifyMeetingCreateError(err error) (int, string) {
+	if err == nil {
+		return http.StatusOK, ""
+	}
+
+	var apiErr *googleapi.Error
+	if errors.As(err, &apiErr) {
+		log.Printf("google calendar insert error: code=%d message=%s", apiErr.Code, strings.TrimSpace(apiErr.Message))
+		return http.StatusBadGateway, "meeting provider error"
+	}
+
+	return http.StatusInternalServerError, "failed to create meeting"
+}
+
+func sendSMTP(cfg config, recipients []string, msg []byte) error {
+	recipients = compactEmails(recipients)
+	if len(recipients) == 0 {
+		return errors.New("at least one recipient is required")
+	}
+
 	addr := fmt.Sprintf("%s:%d", cfg.SMTPHost, cfg.SMTPPort)
 	auth := smtp.PlainAuth("", cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPHost)
 
@@ -697,8 +728,10 @@ func sendSMTP(cfg config, msg []byte) error {
 		if err := client.Mail(cfg.FromEmail); err != nil {
 			return err
 		}
-		if err := client.Rcpt(cfg.ToEmail); err != nil {
-			return err
+		for _, recipient := range recipients {
+			if err := client.Rcpt(recipient); err != nil {
+				return err
+			}
 		}
 
 		wc, err := client.Data()
@@ -716,7 +749,7 @@ func sendSMTP(cfg config, msg []byte) error {
 		return client.Quit()
 	}
 
-	return smtp.SendMail(addr, auth, cfg.FromEmail, []string{cfg.ToEmail}, msg)
+	return smtp.SendMail(addr, auth, cfg.FromEmail, recipients, msg)
 }
 
 func setCORSHeaders(w http.ResponseWriter, r *http.Request, allowedOrigin string) {
@@ -782,4 +815,16 @@ func firstNonEmptyEnv(keys ...string) string {
 		}
 	}
 	return ""
+}
+
+func compactEmails(values []string) []string {
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		trimmed := strings.TrimSpace(value)
+		if trimmed == "" {
+			continue
+		}
+		result = append(result, trimmed)
+	}
+	return result
 }
