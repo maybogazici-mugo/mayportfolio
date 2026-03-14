@@ -544,9 +544,6 @@ func buildCalendarEvent(
 		ConferenceData: &calendar.ConferenceData{
 			CreateRequest: &calendar.CreateConferenceRequest{
 				RequestId: conferenceRequestID(),
-				ConferenceSolutionKey: &calendar.ConferenceSolutionKey{
-					Type: "hangoutsMeet",
-				},
 			},
 		},
 	}

@@ -25,8 +25,8 @@ func TestBuildCalendarEventOmitsAttendees(t *testing.T) {
 	if event.ConferenceData == nil || event.ConferenceData.CreateRequest == nil {
 		t.Fatal("expected conference data create request")
 	}
-	if got := event.ConferenceData.CreateRequest.ConferenceSolutionKey.Type; got != "hangoutsMeet" {
-		t.Fatalf("expected hangoutsMeet conference, got %q", got)
+	if event.ConferenceData.CreateRequest.ConferenceSolutionKey != nil {
+		t.Fatal("expected conference type to be omitted so Google can pick a supported provider")
 	}
 	if got := event.Start.TimeZone; got != "Europe/Istanbul" {
 		t.Fatalf("expected timezone to be preserved, got %q", got)
