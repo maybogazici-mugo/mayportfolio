@@ -236,20 +236,20 @@ func appointmentHandler(cfg config) http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), cfg.RequestTimeout)
 		defer cancel()
 
-			if err := ensureAppointmentAvailability(ctx, cfg, startAt, endAt); err != nil {
-				if errors.Is(err, errSlotUnavailable) {
-					http.Error(w, err.Error(), http.StatusConflict)
-				} else if err.Error() == "meeting service is unavailable" {
-					log.Printf("availability check failed: %v", err)
-					http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				} else if err.Error() == "calendar availability could not be verified" || strings.HasPrefix(err.Error(), "calendar availability error:") {
-					log.Printf("availability check failed: %v", err)
-					http.Error(w, err.Error(), http.StatusBadGateway)
-				} else {
-					log.Printf("availability check failed: %v", err)
-					http.Error(w, "failed to verify appointment availability", http.StatusInternalServerError)
-				}
-				return
+		if err := ensureAppointmentAvailability(ctx, cfg, startAt, endAt); err != nil {
+			if errors.Is(err, errSlotUnavailable) {
+				http.Error(w, err.Error(), http.StatusConflict)
+			} else if err.Error() == "meeting service is unavailable" {
+				log.Printf("availability check failed: %v", err)
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			} else if err.Error() == "calendar availability could not be verified" || strings.HasPrefix(err.Error(), "calendar availability error:") {
+				log.Printf("availability check failed: %v", err)
+				http.Error(w, err.Error(), http.StatusBadGateway)
+			} else {
+				log.Printf("availability check failed: %v", err)
+				http.Error(w, "failed to verify appointment availability", http.StatusInternalServerError)
+			}
+			return
 		}
 
 		createdEvent, err := createMeetEvent(ctx, cfg, req, startAt, endAt, tz)
@@ -265,7 +265,7 @@ func appointmentHandler(cfg config) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(appointmentResponse{
 			Message:      "Meeting created",
-			MeetLink:     createdEvent.HangoutLink,
+			MeetLink:     eventMeetLink(createdEvent),
 			EventLink:    createdEvent.HtmlLink,
 			EventID:      createdEvent.Id,
 			StartRFC3339: createdEvent.Start.DateTime,
@@ -550,18 +550,7 @@ func sendAppointmentConfirmationEmail(
 		return errors.New("appointment confirmation requires event details")
 	}
 
-	meetLink := strings.TrimSpace(event.HangoutLink)
-	if meetLink == "" && event.ConferenceData != nil && len(event.ConferenceData.EntryPoints) > 0 {
-		for _, entry := range event.ConferenceData.EntryPoints {
-			if entry == nil {
-				continue
-			}
-			if entry.EntryPointType == "video" && strings.TrimSpace(entry.Uri) != "" {
-				meetLink = entry.Uri
-				break
-			}
-		}
-	}
+	meetLink := eventMeetLink(event)
 
 	startAt := ""
 	if event.Start != nil {
@@ -621,6 +610,32 @@ func newCalendarService(ctx context.Context, cfg config) (*calendar.Service, err
 	}
 
 	return calendar.NewService(ctx, option.WithTokenSource(creds.TokenSource))
+}
+
+func eventMeetLink(event *calendar.Event) string {
+	if event == nil {
+		return ""
+	}
+
+	meetLink := strings.TrimSpace(event.HangoutLink)
+	if meetLink != "" {
+		return meetLink
+	}
+
+	if event.ConferenceData == nil {
+		return ""
+	}
+
+	for _, entry := range event.ConferenceData.EntryPoints {
+		if entry == nil {
+			continue
+		}
+		if entry.EntryPointType == "video" && strings.TrimSpace(entry.Uri) != "" {
+			return entry.Uri
+		}
+	}
+
+	return ""
 }
 
 func parseWorkingDays(raw string) map[time.Weekday]bool {
