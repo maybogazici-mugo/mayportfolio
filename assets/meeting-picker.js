@@ -61,22 +61,12 @@
     const configured = (document.querySelector('meta[name="api-base-url"]')?.getAttribute("content") || "")
       .trim()
       .replace(/\/+$/, "");
-    const candidates = [];
 
     if (configured) {
-      candidates.push(configured + normalizedPath);
-      if (normalizedPath.startsWith("/api/")) {
-        candidates.push(configured + normalizedPath.replace(/^\/api/, ""));
-      }
-      return Array.from(new Set(candidates));
+      return [configured + normalizedPath];
     }
 
-    candidates.push(normalizedPath);
-    if (normalizedPath.startsWith("/api/")) {
-      candidates.push(normalizedPath.replace(/^\/api/, ""));
-    }
-
-    return Array.from(new Set(candidates));
+    return [normalizedPath];
   };
 
   const fetchWithFallback = async (urls, options) => {
