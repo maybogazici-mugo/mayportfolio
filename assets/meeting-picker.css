@@ -39,6 +39,7 @@
   justify-content: space-between;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
   color: var(--text-dim);
   font-size: 0.9rem;
   margin-bottom: 0.9rem;
@@ -107,6 +108,17 @@
 }
 
 @media (max-width: 640px) {
+  .meeting-picker-trigger,
+  .meeting-picker-panel,
+  .meeting-picker-cell {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .meeting-picker-panel-header {
+    align-items: flex-start;
+  }
+
   .meeting-picker-grid,
   .meeting-picker-grid-hours {
     grid-template-columns: 1fr;
