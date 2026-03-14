@@ -15,8 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;700&display=swap"
         rel="stylesheet">
-  <script type="module" crossorigin src="/assets/index-D0EcsKkB.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-D__yKQ0Y.css">
+    <script type="module" crossorigin src="/assets/index-D0EcsKkB.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D__yKQ0Y.css">
+    <link rel="stylesheet" href="/assets/meeting-picker.css">
 </head>
 
 <body>
@@ -244,7 +245,30 @@
                     <form class="contact-form" id="meeting-form" novalidate>
                         <input type="text" name="name" placeholder="Adınız Soyadınız" autocomplete="name" required>
                         <input type="email" name="email" placeholder="E-posta Adresiniz" autocomplete="email" required>
-                        <input type="datetime-local" name="startAt" required>
+                        <input type="hidden" name="startAt" required>
+                        <div class="meeting-picker" id="meeting-picker">
+                            <button type="button" class="meeting-picker-trigger" data-picker-trigger="date" aria-expanded="false">
+                                Tarih seçin
+                            </button>
+                            <div class="meeting-picker-panel" data-picker-panel="date" hidden>
+                                <div class="meeting-picker-panel-header">
+                                    <strong>Uygun günler</strong>
+                                    <span id="meeting-picker-timezone"></span>
+                                </div>
+                                <div class="meeting-picker-grid" id="meeting-date-grid"></div>
+                            </div>
+                            <button type="button" class="meeting-picker-trigger" data-picker-trigger="time" aria-expanded="false" disabled>
+                                Saat seçin
+                            </button>
+                            <div class="meeting-picker-panel" data-picker-panel="time" hidden>
+                                <div class="meeting-picker-panel-header">
+                                    <strong>Uygun saatler</strong>
+                                    <span id="meeting-picker-selected-date"></span>
+                                </div>
+                                <div class="meeting-picker-grid meeting-picker-grid-hours" id="meeting-time-grid"></div>
+                            </div>
+                            <p class="meeting-picker-summary" id="meeting-picker-summary"></p>
+                        </div>
                         <select name="durationMinutes" required>
                             <option value="30">30 dakika</option>
                             <option value="45">45 dakika</option>
@@ -265,6 +289,7 @@
             </div>
         </footer>
     </div>
+    <script src="/assets/meeting-picker.js" defer></script>
 </body>
 
 </html>

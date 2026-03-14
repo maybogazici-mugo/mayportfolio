@@ -71,6 +71,28 @@ type appointmentResponse struct {
 	EndRFC3339   string `json:"end"`
 }
 
+type availabilityResponse struct {
+	Timezone string            `json:"timezone"`
+	Days     []availabilityDay `json:"days"`
+}
+
+type availabilityDay struct {
+	Date           string             `json:"date"`
+	Label          string             `json:"label"`
+	AvailableCount int                `json:"availableCount"`
+	Slots          []availabilitySlot `json:"slots"`
+}
+
+type availabilitySlot struct {
+	StartAt string `json:"startAt"`
+	Label   string `json:"label"`
+}
+
+type timeInterval struct {
+	Start time.Time
+	End   time.Time
+}
+
 var errSlotUnavailable = errors.New("selected time is already booked")
 
 func main() {
@@ -85,6 +107,8 @@ func main() {
 	mux.HandleFunc("/healths", healthHandler)
 	mux.HandleFunc("/api/contact", contactHandler(cfg))
 	mux.HandleFunc("/contact", contactHandler(cfg))
+	mux.HandleFunc("/api/appointments/availability", appointmentAvailabilityHandler(cfg))
+	mux.HandleFunc("/appointments/availability", appointmentAvailabilityHandler(cfg))
 	mux.HandleFunc("/api/appointments", appointmentHandler(cfg))
 	mux.HandleFunc("/appointments", appointmentHandler(cfg))
 	mux.Handle("/", http.FileServer(http.Dir(".")))
@@ -276,6 +300,93 @@ func appointmentHandler(cfg config) http.HandlerFunc {
 	}
 }
 
+func appointmentAvailabilityHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		setCORSHeaders(w, r, cfg.AllowedOrigin)
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if cfg.GoogleCalendarID == "" || (cfg.GoogleCredentialsJSON == "" && cfg.GoogleCredentialsFile == "") {
+			http.Error(w, "meeting service is not configured", http.StatusServiceUnavailable)
+			return
+		}
+
+		locationName := strings.TrimSpace(r.URL.Query().Get("timezone"))
+		if locationName == "" {
+			locationName = cfg.DefaultMeetingTimezone
+		}
+		location, resolvedTimezone := resolveAppointmentLocation(cfg, locationName)
+
+		durationMinutes := 30
+		if rawDuration := strings.TrimSpace(r.URL.Query().Get("durationMinutes")); rawDuration != "" {
+			parsedDuration, err := strconv.Atoi(rawDuration)
+			if err != nil {
+				http.Error(w, "durationMinutes must be a number", http.StatusBadRequest)
+				return
+			}
+			durationMinutes = parsedDuration
+		}
+		if durationMinutes < 15 || durationMinutes > 120 {
+			http.Error(w, "durationMinutes must be between 15 and 120", http.StatusBadRequest)
+			return
+		}
+
+		days := 14
+		if rawDays := strings.TrimSpace(r.URL.Query().Get("days")); rawDays != "" {
+			parsedDays, err := strconv.Atoi(rawDays)
+			if err != nil {
+				http.Error(w, "days must be a number", http.StatusBadRequest)
+				return
+			}
+			days = parsedDays
+		}
+		if days < 1 || days > 31 {
+			http.Error(w, "days must be between 1 and 31", http.StatusBadRequest)
+			return
+		}
+
+		startDate := time.Now().In(location)
+		if rawDate := strings.TrimSpace(r.URL.Query().Get("date")); rawDate != "" {
+			parsedDate, err := time.ParseInLocation("2006-01-02", rawDate, location)
+			if err != nil {
+				http.Error(w, "date must be in YYYY-MM-DD format", http.StatusBadRequest)
+				return
+			}
+			startDate = parsedDate
+		}
+		startDate = time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, location)
+
+		ctx, cancel := context.WithTimeout(r.Context(), cfg.RequestTimeout)
+		defer cancel()
+
+		daysResult, err := listAppointmentAvailability(ctx, cfg, startDate, days, durationMinutes, location)
+		if err != nil {
+			if err.Error() == "meeting service is unavailable" {
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			} else if err.Error() == "calendar availability could not be verified" || strings.HasPrefix(err.Error(), "calendar availability error:") {
+				log.Printf("availability list failed: %v", err)
+				http.Error(w, err.Error(), http.StatusBadGateway)
+			} else {
+				log.Printf("availability list failed: %v", err)
+				http.Error(w, "failed to load availability", http.StatusInternalServerError)
+			}
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(availabilityResponse{
+			Timezone: resolvedTimezone,
+			Days:     daysResult,
+		})
+	}
+}
+
 func healthHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(apiResponse{Message: "ok"})
@@ -386,19 +497,7 @@ func validateAppointmentRequest(cfg config, req appointmentRequest) (time.Time, 
 		return time.Time{}, time.Time{}, "", errors.New("invalid email address")
 	}
 
-	location, err := time.LoadLocation(timezone)
-	if err != nil {
-		fallback := strings.TrimSpace(cfg.DefaultMeetingTimezone)
-		if fallback == "" {
-			fallback = "UTC"
-		}
-		location, err = time.LoadLocation(fallback)
-		if err != nil {
-			location = time.UTC
-			fallback = "UTC"
-		}
-		timezone = fallback
-	}
+	location, timezone := resolveAppointmentLocation(cfg, timezone)
 
 	startAt, err := time.ParseInLocation("2006-01-02T15:04", startAtRaw, location)
 	if err != nil {
@@ -488,6 +587,150 @@ func ensureAppointmentAvailability(ctx context.Context, cfg config, startAt, end
 	return nil
 }
 
+func listAppointmentAvailability(
+	ctx context.Context,
+	cfg config,
+	startDate time.Time,
+	days int,
+	durationMinutes int,
+	location *time.Location,
+) ([]availabilityDay, error) {
+	svc, err := newCalendarService(ctx, cfg)
+	if err != nil {
+		return nil, errors.New("meeting service is unavailable")
+	}
+
+	rangeStart := time.Date(startDate.Year(), startDate.Month(), startDate.Day(), cfg.WorkingHourStart, 0, 0, 0, location)
+	lastDate := startDate.AddDate(0, 0, days-1)
+	rangeEnd := time.Date(lastDate.Year(), lastDate.Month(), lastDate.Day(), cfg.WorkingHourEnd, 0, 0, 0, location)
+
+	query := &calendar.FreeBusyRequest{
+		TimeMin: rangeStart.Format(time.RFC3339),
+		TimeMax: rangeEnd.Format(time.RFC3339),
+		Items: []*calendar.FreeBusyRequestItem{
+			{Id: cfg.GoogleCalendarID},
+		},
+	}
+
+	resp, err := svc.Freebusy.Query(query).Do()
+	if err != nil {
+		log.Printf("freebusy list failed: %v", err)
+		return nil, errors.New("failed to load appointment availability")
+	}
+
+	cal, ok := resp.Calendars[cfg.GoogleCalendarID]
+	if !ok {
+		return nil, errors.New("calendar availability could not be verified")
+	}
+	if len(cal.Errors) > 0 {
+		details := make([]string, 0, len(cal.Errors))
+		for _, apiErr := range cal.Errors {
+			if apiErr == nil {
+				continue
+			}
+			reason := strings.TrimSpace(apiErr.Reason)
+			domain := strings.TrimSpace(apiErr.Domain)
+			if reason == "" && domain == "" {
+				continue
+			}
+			if domain == "" {
+				details = append(details, reason)
+			} else {
+				details = append(details, fmt.Sprintf("%s:%s", domain, reason))
+			}
+		}
+		if len(details) == 0 {
+			return nil, errors.New("calendar availability error: unknown")
+		}
+		return nil, fmt.Errorf("calendar availability error: %s", strings.Join(details, ", "))
+	}
+
+	return buildAvailabilityDays(cfg, startDate, days, durationMinutes, location, toBusyIntervals(cal.Busy), time.Now().In(location)), nil
+}
+
+func buildAvailabilityDays(
+	cfg config,
+	startDate time.Time,
+	days int,
+	durationMinutes int,
+	location *time.Location,
+	busy []timeInterval,
+	now time.Time,
+) []availabilityDay {
+	result := make([]availabilityDay, 0, days)
+	minimumStart := now.Add(10 * time.Minute)
+
+	for dayOffset := 0; dayOffset < days; dayOffset++ {
+		currentDate := startDate.AddDate(0, 0, dayOffset)
+		day := availabilityDay{
+			Date:  currentDate.Format("2006-01-02"),
+			Label: currentDate.Format("Mon 02 Jan"),
+			Slots: make([]availabilitySlot, 0),
+		}
+
+		if cfg.WorkingDays[currentDate.Weekday()] {
+			for minute := cfg.WorkingHourStart * 60; minute+durationMinutes <= cfg.WorkingHourEnd*60; minute += 30 {
+				slotStart := time.Date(
+					currentDate.Year(),
+					currentDate.Month(),
+					currentDate.Day(),
+					minute/60,
+					minute%60,
+					0,
+					0,
+					location,
+				)
+				slotEnd := slotStart.Add(time.Duration(durationMinutes) * time.Minute)
+
+				if slotStart.Before(minimumStart) {
+					continue
+				}
+				if hasBusyOverlap(slotStart, slotEnd, busy) {
+					continue
+				}
+
+				day.Slots = append(day.Slots, availabilitySlot{
+					StartAt: slotStart.Format("2006-01-02T15:04"),
+					Label:   slotStart.Format("15:04"),
+				})
+			}
+		}
+
+		day.AvailableCount = len(day.Slots)
+		result = append(result, day)
+	}
+
+	return result
+}
+
+func toBusyIntervals(periods []*calendar.TimePeriod) []timeInterval {
+	result := make([]timeInterval, 0, len(periods))
+	for _, period := range periods {
+		if period == nil {
+			continue
+		}
+		startAt, err := time.Parse(time.RFC3339, strings.TrimSpace(period.Start))
+		if err != nil {
+			continue
+		}
+		endAt, err := time.Parse(time.RFC3339, strings.TrimSpace(period.End))
+		if err != nil {
+			continue
+		}
+		result = append(result, timeInterval{Start: startAt, End: endAt})
+	}
+	return result
+}
+
+func hasBusyOverlap(startAt, endAt time.Time, busy []timeInterval) bool {
+	for _, interval := range busy {
+		if startAt.Before(interval.End) && endAt.After(interval.Start) {
+			return true
+		}
+	}
+	return false
+}
+
 func createMeetEvent(
 	ctx context.Context,
 	cfg config,
@@ -559,25 +802,8 @@ func sendAppointmentConfirmationEmail(
 		return errors.New("appointment confirmation requires event details")
 	}
 
-	meetLink := eventMeetLink(event)
-
-	startAt := ""
-	if event.Start != nil {
-		startAt = strings.TrimSpace(event.Start.DateTime)
-	}
-	endAt := ""
-	if event.End != nil {
-		endAt = strings.TrimSpace(event.End.DateTime)
-	}
-
 	subject := "Your appointment is confirmed"
-	body := fmt.Sprintf(
-		"Hi %s,\r\n\r\nYour appointment is confirmed.\r\n\r\nStart: %s\r\nEnd: %s\r\nMeet Link: %s\r\n\r\nIf you need changes, reply to this email.\r\n",
-		strings.TrimSpace(req.Name),
-		startAt,
-		endAt,
-		meetLink,
-	)
+	body := buildAppointmentConfirmationBody(cfg, req, event)
 
 	msg := strings.Join([]string{
 		fmt.Sprintf("From: %s", cfg.FromEmail),
@@ -601,6 +827,60 @@ func sendAppointmentConfirmationEmail(
 	case err := <-errChan:
 		return err
 	}
+}
+
+func buildAppointmentConfirmationBody(cfg config, req appointmentRequest, event *calendar.Event) string {
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		name = "there"
+	}
+
+	meetLink := eventMeetLink(event)
+	eventLink := ""
+	if event != nil {
+		eventLink = strings.TrimSpace(event.HtmlLink)
+	}
+	timezone := strings.TrimSpace(req.Timezone)
+	if timezone == "" && event != nil && event.Start != nil {
+		timezone = strings.TrimSpace(event.Start.TimeZone)
+	}
+	if timezone == "" {
+		timezone = cfg.DefaultMeetingTimezone
+	}
+	if timezone == "" {
+		timezone = "UTC"
+	}
+
+	startLine := formatAppointmentTime(eventTimeValue(event, true), timezone)
+	endLine := formatAppointmentTime(eventTimeValue(event, false), timezone)
+
+	lines := []string{
+		fmt.Sprintf("Hi %s,", name),
+		"",
+		"Your appointment is confirmed.",
+		"",
+		fmt.Sprintf("Date: %s", appointmentDateLabel(eventTimeValue(event, true), timezone)),
+		fmt.Sprintf("Time: %s - %s", startLine, endLine),
+		fmt.Sprintf("Timezone: %s", timezone),
+	}
+
+	if meetLink != "" {
+		lines = append(lines, fmt.Sprintf("Google Meet: %s", meetLink))
+	}
+	if eventLink != "" {
+		lines = append(lines, fmt.Sprintf("Calendar event: %s", eventLink))
+	}
+	if meetLink == "" && eventLink == "" {
+		lines = append(lines, "Meeting link: We will send the join link separately if it is not attached yet.")
+	}
+
+	lines = append(
+		lines,
+		"",
+		"If you need any changes, reply to this email.",
+	)
+
+	return strings.Join(lines, "\r\n")
 }
 
 func newCalendarService(ctx context.Context, cfg config) (*calendar.Service, error) {
@@ -645,6 +925,84 @@ func eventMeetLink(event *calendar.Event) string {
 	}
 
 	return ""
+}
+
+func eventTimeValue(event *calendar.Event, isStart bool) string {
+	if event == nil {
+		return ""
+	}
+
+	dateTime := ""
+	if isStart && event.Start != nil {
+		dateTime = strings.TrimSpace(event.Start.DateTime)
+	}
+	if !isStart && event.End != nil {
+		dateTime = strings.TrimSpace(event.End.DateTime)
+	}
+
+	return dateTime
+}
+
+func appointmentDateLabel(dateTimeValue, timezone string) string {
+	parsed, ok := parseAppointmentDateTime(dateTimeValue, timezone)
+	if !ok {
+		return "Scheduled time"
+	}
+
+	return parsed.Format("Monday, 02 January 2006")
+}
+
+func formatAppointmentTime(dateTimeValue, timezone string) string {
+	parsed, ok := parseAppointmentDateTime(dateTimeValue, timezone)
+	if !ok {
+		return "TBD"
+	}
+
+	return parsed.Format("15:04")
+}
+
+func parseAppointmentDateTime(dateTimeValue, timezone string) (time.Time, bool) {
+	dateTimeValue = strings.TrimSpace(dateTimeValue)
+	if dateTimeValue == "" {
+		return time.Time{}, false
+	}
+
+	parsed, err := time.Parse(time.RFC3339, dateTimeValue)
+	if err != nil {
+		return time.Time{}, false
+	}
+
+	location, err := time.LoadLocation(strings.TrimSpace(timezone))
+	if err != nil {
+		return parsed, true
+	}
+
+	return parsed.In(location), true
+}
+
+func resolveAppointmentLocation(cfg config, timezone string) (*time.Location, string) {
+	timezone = strings.TrimSpace(timezone)
+	if timezone == "" {
+		timezone = strings.TrimSpace(cfg.DefaultMeetingTimezone)
+	}
+	if timezone == "" {
+		timezone = "UTC"
+	}
+
+	location, err := time.LoadLocation(timezone)
+	if err == nil {
+		return location, timezone
+	}
+
+	fallback := strings.TrimSpace(cfg.DefaultMeetingTimezone)
+	if fallback == "" {
+		fallback = "UTC"
+	}
+	location, err = time.LoadLocation(fallback)
+	if err != nil {
+		return time.UTC, "UTC"
+	}
+	return location, fallback
 }
 
 func parseWorkingDays(raw string) map[time.Weekday]bool {
