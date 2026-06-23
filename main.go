@@ -43,10 +43,12 @@ type config struct {
 }
 
 type contactRequest struct {
-	Name    string `json:"name"`
-	Email   string `json:"email"`
-	Service string `json:"service"`
-	Message string `json:"message"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Service  string `json:"service"`
+	Budget   string `json:"budget"`
+	Timeline string `json:"timeline"`
+	Message  string `json:"message"`
 }
 
 type apiResponse struct {
@@ -415,11 +417,21 @@ func validateContactRequest(req contactRequest) error {
 
 func sendContactEmail(ctx context.Context, cfg config, req contactRequest) error {
 	subject := fmt.Sprintf("New contact form lead: %s", req.Name)
+	budget := req.Budget
+	if budget == "" {
+		budget = "Not specified"
+	}
+	timeline := req.Timeline
+	if timeline == "" {
+		timeline = "Not specified"
+	}
 	body := fmt.Sprintf(
-		"You received a new contact form submission.\r\n\r\nName: %s\r\nEmail: %s\r\nService: %s\r\n\r\nMessage:\r\n%s\r\n",
+		"You received a new contact form submission.\r\n\r\nName: %s\r\nEmail: %s\r\nService: %s\r\nBudget: %s\r\nTimeline: %s\r\n\r\nMessage:\r\n%s\r\n",
 		req.Name,
 		req.Email,
 		req.Service,
+		budget,
+		timeline,
 		req.Message,
 	)
 

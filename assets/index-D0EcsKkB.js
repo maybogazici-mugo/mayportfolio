@@ -108,21 +108,26 @@ const translations = {
     plans: [
       {
         name: "Başlangıç Paketi",
-        monthly: "₺4.999",
-        yearly: "₺3.999",
-        features: ["AI Asistan & Chatbot", "Haftalık Raporlama", "7/24 Destek"],
+        monthly: "₺2.499",
+        yearly: "₺1.999",
+        features: [
+          "Günde 200 müşteri sorusuna kadar otomatik yanıt",
+          "Haftalık performans raporu",
+          "7/24 kesintisiz çalışan sistem",
+          "30 gün içinde kurulum",
+        ],
         cta: "Seç",
       },
       {
         badge: "En Çok Tercih Edilen",
         name: "Premium Özel Paket",
-        monthly: "₺20.000",
-        yearly: "₺16.000",
+        monthly: "₺10.000",
+        yearly: "₺8.000",
         features: [
-          "İstediğiniz 4 Otomasyon",
-          "Öncelikli Destek",
-          "Özel Entegrasyonlar",
-          "Stratejik Danışmanlık",
+          "İstediğiniz 4 otomasyonu birden çalıştırın",
+          "Aynı gün yanıt garantili öncelikli destek",
+          "CRM, takvim ve mevcut araçlarınızla entegrasyon",
+          "Aylık strateji görüşmesi",
         ],
         cta: "Hemen Başla",
       },
@@ -159,6 +164,16 @@ const translations = {
       "Sosyal Medya Otomasyonu",
       "E-posta Otomasyonu",
     ],
+    budgetPlaceholder: "Aylık Bütçeniz (opsiyonel)",
+    budgetOptions: [
+      "₺2.500 - ₺5.000",
+      "₺5.000 - ₺10.000",
+      "₺10.000 - ₺20.000",
+      "₺20.000+",
+      "Henüz belirsiz",
+    ],
+    timelinePlaceholder: "Ne Zaman Başlamak İstersiniz?",
+    timelineOptions: ["Hemen", "1-2 hafta içinde", "1 ay içinde", "Sadece araştırıyorum"],
     contactSendButton: "Mesaj Gönder",
     footer: "© 2026 NexGen Automations. Tüm Hakları Saklıdır.",
     monthlySuffix: "/ay",
@@ -284,21 +299,26 @@ const translations = {
     plans: [
       {
         name: "Starter Package",
-        monthly: "₺4,999",
-        yearly: "₺3,999",
-        features: ["AI Assistant & Chatbot", "Weekly Reporting", "24/7 Support"],
+        monthly: "₺2,499",
+        yearly: "₺1,999",
+        features: [
+          "Auto-replies to up to 200 customer questions a day",
+          "Weekly performance report",
+          "Always-on, 24/7 running system",
+          "Live within 30 days",
+        ],
         cta: "Choose",
       },
       {
         badge: "Most Popular",
         name: "Premium Custom Package",
-        monthly: "₺20,000",
-        yearly: "₺16,000",
+        monthly: "₺10,000",
+        yearly: "₺8,000",
         features: [
-          "Any 4 Automations",
-          "Priority Support",
-          "Custom Integrations",
-          "Strategic Consulting",
+          "Run any 4 automations at once",
+          "Priority support with same-day response",
+          "Integrates with your CRM, calendar, and existing tools",
+          "Monthly strategy call",
         ],
         cta: "Start Now",
       },
@@ -335,6 +355,10 @@ const translations = {
       "Social Media Automation",
       "Email Automation",
     ],
+    budgetPlaceholder: "Your Monthly Budget (optional)",
+    budgetOptions: ["$80 - $150", "$150 - $300", "$300 - $600", "$600+", "Not sure yet"],
+    timelinePlaceholder: "When Would You Like to Start?",
+    timelineOptions: ["Right away", "Within 1-2 weeks", "Within a month", "Just researching"],
     contactSendButton: "Send Message",
     footer: "© 2026 NexGen Automations. All Rights Reserved.",
     monthlySuffix: "/mo",
@@ -709,7 +733,9 @@ const applyLanguage = (language) => {
 
   const nameInput = document.querySelector('.contact-form input[type="text"]');
   const emailInput = document.querySelector('.contact-form input[type="email"]');
-  const selectInput = document.querySelector(".contact-form select");
+  const selectInput = document.querySelector('.contact-form select[name="service"]');
+  const budgetInput = document.querySelector('.contact-form select[name="budget"]');
+  const timelineInput = document.querySelector('.contact-form select[name="timeline"]');
   const messageInput = document.querySelector(".contact-form textarea");
   const submitButton = document.querySelector(".contact-form button");
 
@@ -723,31 +749,35 @@ const applyLanguage = (language) => {
     messageInput.placeholder = t.placeholders.message;
   }
 
-  if (selectInput) {
-    const previousValue = selectInput.value;
-    selectInput.innerHTML = "";
+  const rebuildSelect = (select, placeholder, options) => {
+    if (!select) {
+      return;
+    }
+    const previousValue = select.value;
+    select.innerHTML = "";
 
     const placeholderOption = document.createElement("option");
     placeholderOption.value = "";
-    placeholderOption.textContent = t.selectPlaceholder;
-    selectInput.appendChild(placeholderOption);
+    placeholderOption.textContent = placeholder;
+    select.appendChild(placeholderOption);
 
-    t.selectOptions.forEach((optionText) => {
+    options.forEach((optionText) => {
       const option = document.createElement("option");
       option.value = optionText;
       option.textContent = optionText;
-      selectInput.appendChild(option);
+      select.appendChild(option);
     });
 
-    if (
-      previousValue &&
-      t.selectOptions.some((optionText) => optionText === previousValue)
-    ) {
-      selectInput.value = previousValue;
+    if (previousValue && options.some((optionText) => optionText === previousValue)) {
+      select.value = previousValue;
     } else {
-      selectInput.value = "";
+      select.value = "";
     }
-  }
+  };
+
+  rebuildSelect(selectInput, t.selectPlaceholder, t.selectOptions);
+  rebuildSelect(budgetInput, t.budgetPlaceholder, t.budgetOptions);
+  rebuildSelect(timelineInput, t.timelinePlaceholder, t.timelineOptions);
 
   if (submitButton) {
     submitButton.textContent = t.contactSendButton;
@@ -912,12 +942,16 @@ if (contactForm) {
 
     const nameInput = contactForm.querySelector('input[type="text"]');
     const emailInput = contactForm.querySelector('input[type="email"]');
-    const serviceInput = contactForm.querySelector("select");
+    const serviceInput = contactForm.querySelector('select[name="service"]');
+    const budgetInput = contactForm.querySelector('select[name="budget"]');
+    const timelineInput = contactForm.querySelector('select[name="timeline"]');
     const messageInput = contactForm.querySelector("textarea");
 
     const name = nameInput ? nameInput.value.trim() : "";
     const email = emailInput ? emailInput.value.trim() : "";
     const service = serviceInput ? serviceInput.value.trim() : "";
+    const budget = budgetInput ? budgetInput.value.trim() : "";
+    const timeline = timelineInput ? timelineInput.value.trim() : "";
     const message = messageInput ? messageInput.value.trim() : "";
 
     if (!name || !email || !service || !message) {
@@ -945,6 +979,8 @@ if (contactForm) {
             name,
             email,
             service,
+            budget,
+            timeline,
             message,
           }),
         }
