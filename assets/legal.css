@@ -1,0 +1,46 @@
+.legal-page {
+  padding: 9rem 0 5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.legal-page h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(2.2rem, 5vw, 3rem);
+  margin-bottom: 0.5rem;
+}
+
+.legal-updated {
+  color: var(--text-dim);
+  margin-bottom: 3rem;
+  font-size: 0.9rem;
+}
+
+.legal-page section {
+  margin-bottom: 2.5rem;
+}
+
+.legal-page h2 {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.legal-page p {
+  color: var(--text-dim);
+  line-height: 1.8;
+}
+
+.legal-disclaimer {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--glass-border);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+@media (max-width: 640px) {
+  .legal-page {
+    padding: 7rem 0 3rem;
+  }
+}

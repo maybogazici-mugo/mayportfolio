@@ -172,6 +172,61 @@ const translations = {
       "Mesajınız alındı. En kısa sürede size e-posta veya telefonla dönüş yapacağız.",
     formError:
       "Mesaj gönderilemedi. Lütfen kısa bir süre sonra tekrar deneyin.",
+    trustLabel: "İşletmelerin Otomasyon İhtiyaçlarında Tercih Ettiği Çözüm Ortağı",
+    trustTags: ["E-ticaret", "SaaS", "Perakende", "Hizmet Sektörü", "Lojistik", "Sağlık"],
+    aboutTitle: "Kimiz?",
+    aboutP1:
+      "NexGen Automations, işletmelerin tekrarlayan ve zaman alan görevlerini yapay zeka destekli sistemlerle otomatikleştiren mühendislik odaklı bir otomasyon stüdyosudur.",
+    aboutP2:
+      "Her projeye sıfırdan, işletmenin gerçek ihtiyacına göre tasarlanmış bir mühendislik problemi gibi yaklaşırız — hazır şablon değil, size özel çalışan bir sistem kurarız.",
+    aboutStat1: "Otomasyon Kategorisi",
+    aboutStat2: "Çalışan Sistemler",
+    resultsTitle: "Örnek Sonuçlar",
+    resultsSubtitle: "Benzer bir işletme için kurduğumuz bir otomasyonun yarattığı etki.",
+    resultsTag: "Örnek Sonuç",
+    resultsUnit1: "sa/hafta",
+    resultsStat1: "Kazanılan Zaman",
+    resultsStat2Value: "%63",
+    resultsStat2: "Daha Hızlı Yanıt Süresi",
+    resultsUnit3: "ay",
+    resultsStat3: "Yatırımın Geri Dönüşü",
+    resultsDesc:
+      "E-ticaret odaklı bir müşteri için kurduğumuz akıllı chatbot ve e-posta otomasyonu, destek ekibinin haftada 18 saatini geri kazandırdı ve yanıt sürelerini %63 hızlandırdı.",
+    resultsQuote:
+      "\"Manuel olarak yaptığımız işlerin büyük kısmını otomatikleştirdik. Ekibimiz artık tekrarlayan görevler yerine büyümeye odaklanıyor.\"",
+    resultsAuthor: "— Örnek Müşteri, E-ticaret Sektörü",
+    roiTitle: "Ne Kadar Zaman Kaybediyorsunuz?",
+    roiSubtitle: "İki soruyu cevaplayın, manuel işlerin yıllık size maliyetini görün.",
+    roiHoursLabel: "Haftada manuel işlere kaç saat ayırıyorsunuz?",
+    roiHoursUnit: "sa/hafta",
+    roiRateLabel: "Bu sürenin saatlik maliyeti (₺)?",
+    roiPerHour: "/sa",
+    roiMonthly: "Aylık Kayıp",
+    roiYearly: "Yıllık Kayıp",
+    roiNote: "Bu, otomasyon ile geri kazanabileceğiniz zamanın ve bütçenin tahmini değeridir.",
+    roiCta: "Bu Zamanı Geri Kazanın",
+    faqTitle: "Sıkça Sorulan Sorular",
+    faqSubtitle: "Aklına gelen ilk sorular muhtemelen burada.",
+    faqItems: [
+      {
+        q: "Uzun dönem bir sözleşme imzalamam gerekiyor mu?",
+        a: "Hayır. Uzun dönem bir sözleşme yok, istediğiniz zaman iptal edebilirsiniz. İptal sonrası sistemleriniz mevcut faturalandırma döneminin sonuna kadar çalışmaya devam eder.",
+      },
+      {
+        q: "Kurulum ne kadar sürer?",
+        a: "Kurulum süresi projenin kapsamına göre değişir, genelde 1-3 hafta arasında sürer. Görüşme sonrası size net bir zaman çizelgesi paylaşırız.",
+      },
+      {
+        q: "Mevcut araçlarımla (CRM, e-posta, takvim vb.) entegre olur mu?",
+        a: "Genellikle evet. Otomasyonları, kullandığınız mevcut araçlara entegre şekilde tasarlıyoruz; hangi araçları kullandığınızı görüşme sırasında öğrenip ona göre planlıyoruz.",
+      },
+      {
+        q: "Fiyatlar neye göre belirleniyor?",
+        a: "Hazır paketlerimiz var, ayrıca yalnızca ihtiyacınız olan otomasyonları seçip kendi paketinizi de oluşturabilirsiniz. Tam özel projeler için görüşme sonrası ayrı bir teklif hazırlarız.",
+      },
+    ],
+    footerPrivacy: "Gizlilik Politikası",
+    footerTerms: "Hizmet Şartları",
   },
   en: {
     metaTitle: "NexGen Automations | Automate the Future",
@@ -292,6 +347,61 @@ const translations = {
     formSuccess:
       "Your message has been received. We will get back to you by email or phone shortly.",
     formError: "Your message could not be sent. Please try again shortly.",
+    trustLabel: "The Trusted Automation Partner for Growing Businesses",
+    trustTags: ["E-commerce", "SaaS", "Retail", "Services", "Logistics", "Healthcare"],
+    aboutTitle: "Who We Are",
+    aboutP1:
+      "NexGen Automations is an engineering-driven automation studio that helps businesses eliminate repetitive, time-consuming work with AI-powered systems.",
+    aboutP2:
+      "We approach every project as an engineering problem designed around your real needs — not a template, but a working system built specifically for you.",
+    aboutStat1: "Automation Categories",
+    aboutStat2: "Always-On Systems",
+    resultsTitle: "Example Results",
+    resultsSubtitle: "The impact of an automation we built for a similar business.",
+    resultsTag: "Example Result",
+    resultsUnit1: "hrs/week",
+    resultsStat1: "Time Saved",
+    resultsStat2Value: "63%",
+    resultsStat2: "Faster Response Time",
+    resultsUnit3: "mo",
+    resultsStat3: "Return on Investment",
+    resultsDesc:
+      "For an e-commerce client, the smart chatbot and email automation we built gave the support team back 18 hours a week and made response times 63% faster.",
+    resultsQuote:
+      "\"We automated most of the work we used to do manually. Our team now focuses on growth instead of repetitive tasks.\"",
+    resultsAuthor: "— Example Client, E-commerce Industry",
+    roiTitle: "How Much Time Are You Wasting?",
+    roiSubtitle: "Answer two questions to see what manual work is costing you per year.",
+    roiHoursLabel: "How many hours a week do you spend on manual tasks?",
+    roiHoursUnit: "hrs/week",
+    roiRateLabel: "What's the hourly cost of that time (₺)?",
+    roiPerHour: "/hr",
+    roiMonthly: "Monthly Loss",
+    roiYearly: "Yearly Loss",
+    roiNote: "This is an estimate of the time and budget you could recover with automation.",
+    roiCta: "Get This Time Back",
+    faqTitle: "Frequently Asked Questions",
+    faqSubtitle: "The questions you're probably already thinking of.",
+    faqItems: [
+      {
+        q: "Do I need to sign a long-term contract?",
+        a: "No. There's no long-term contract — you can cancel anytime. After cancellation your systems keep running until the end of the current billing period.",
+      },
+      {
+        q: "How long does setup take?",
+        a: "Setup time depends on the scope of the project, but it's usually 1-3 weeks. We'll share a clear timeline with you after our first call.",
+      },
+      {
+        q: "Will it integrate with the tools I already use (CRM, email, calendar, etc.)?",
+        a: "In most cases, yes. We design automations to plug into the tools you already use — we map this out during our first conversation.",
+      },
+      {
+        q: "How is pricing determined?",
+        a: "We have ready-made packages, and you can also build your own by selecting only the automations you need. For fully custom projects, we put together a separate quote after our call.",
+      },
+    ],
+    footerPrivacy: "Privacy Policy",
+    footerTerms: "Terms of Service",
   },
 };
 
@@ -476,6 +586,7 @@ const applyLanguage = (language) => {
   const t = translations[language];
 
   document.documentElement.lang = language;
+  document.body.classList.toggle("lang-en", language === "en");
   document.title = t.metaTitle;
 
   const metaDescription = document.querySelector('meta[name="description"]');
@@ -647,6 +758,80 @@ const applyLanguage = (language) => {
   if (languageToggle) {
     languageToggle.textContent = t.toggleButtonLabel;
     languageToggle.setAttribute("aria-label", t.toggleAria);
+  }
+
+  setText(".trust-label", t.trustLabel);
+  const trustTagNodes = document.querySelectorAll(".trust-tags span");
+  trustTagNodes.forEach((node, index) => {
+    if (t.trustTags[index]) {
+      node.textContent = t.trustTags[index];
+    }
+  });
+
+  setText("#about h2", t.aboutTitle);
+  const aboutParagraphs = document.querySelectorAll(".about-content > p");
+  if (aboutParagraphs[0]) {
+    aboutParagraphs[0].textContent = t.aboutP1;
+  }
+  if (aboutParagraphs[1]) {
+    aboutParagraphs[1].textContent = t.aboutP2;
+  }
+  const aboutStatLabels = document.querySelectorAll(".about-stat-label");
+  if (aboutStatLabels[0]) {
+    aboutStatLabels[0].textContent = t.aboutStat1;
+  }
+  if (aboutStatLabels[1]) {
+    aboutStatLabels[1].textContent = t.aboutStat2;
+  }
+
+  setText("#results .section-header h2", t.resultsTitle);
+  setText("#results .section-header p", t.resultsSubtitle);
+  setText(".example-tag", t.resultsTag);
+  setText(".result-stats .stat:nth-child(1) .stat-num span", t.resultsUnit1);
+  setText(".result-stats .stat:nth-child(1) .stat-label", t.resultsStat1);
+  setText(".result-stats .stat:nth-child(2) .stat-num", t.resultsStat2Value);
+  setText(".result-stats .stat:nth-child(2) .stat-label", t.resultsStat2);
+  setText(".result-stats .stat:nth-child(3) .stat-num span", t.resultsUnit3);
+  setText(".result-stats .stat:nth-child(3) .stat-label", t.resultsStat3);
+  setText(".result-desc", t.resultsDesc);
+  setText(".result-quote p", `"${t.resultsQuote.replace(/^"|"$/g, "")}"`);
+  setText(".result-author", t.resultsAuthor);
+
+  setText("#roi .section-header h2", t.roiTitle);
+  setText("#roi .section-header p", t.roiSubtitle);
+  setText('label[for="roi-hours"]', t.roiHoursLabel);
+  setText(".roi-hours-unit", t.roiHoursUnit);
+  setText('label[for="roi-rate"]', t.roiRateLabel);
+  setText(".roi-per-hour", t.roiPerHour);
+  setText(".roi-result-card:not(.highlight) .roi-result-label", t.roiMonthly);
+  setText(".roi-result-card.highlight .roi-result-label", t.roiYearly);
+  setText(".roi-note", t.roiNote);
+  setText("#roi .btn", t.roiCta);
+
+  setText("#faq .section-header h2", t.faqTitle);
+  setText("#faq .section-header p", t.faqSubtitle);
+  const faqItemNodes = document.querySelectorAll(".faq-item");
+  faqItemNodes.forEach((item, index) => {
+    const entry = t.faqItems[index];
+    if (!entry) {
+      return;
+    }
+    const question = item.querySelector(".faq-question span:first-child");
+    const answer = item.querySelector(".faq-answer p");
+    if (question) {
+      question.textContent = entry.q;
+    }
+    if (answer) {
+      answer.textContent = entry.a;
+    }
+  });
+
+  const footerLinks = document.querySelectorAll(".footer-links a");
+  if (footerLinks[0]) {
+    footerLinks[0].textContent = t.footerPrivacy;
+  }
+  if (footerLinks[1]) {
+    footerLinks[1].textContent = t.footerTerms;
   }
 
   updatePricingValues();

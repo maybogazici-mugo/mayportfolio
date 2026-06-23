@@ -18,6 +18,7 @@
     <script type="module" crossorigin src="/assets/index-D0EcsKkB.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-D__yKQ0Y.css">
     <link rel="stylesheet" href="/assets/meeting-picker.css">
+    <link rel="stylesheet" href="/assets/custom.css">
 </head>
 
 <body>
@@ -59,6 +60,20 @@
                         <a href="#services" class="btn btn-primary">Çözümleri İncele</a>
                         <a href="#pricing" class="btn btn-secondary">Fiyat Listesi</a>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="trust-strip">
+            <div class="container">
+                <p class="trust-label">İşletmelerin Otomasyon İhtiyaçlarında Tercih Ettiği Çözüm Ortağı</p>
+                <div class="trust-tags">
+                    <span>E-ticaret</span>
+                    <span>SaaS</span>
+                    <span>Perakende</span>
+                    <span>Hizmet Sektörü</span>
+                    <span>Lojistik</span>
+                    <span>Sağlık</span>
                 </div>
             </div>
         </section>
@@ -115,6 +130,97 @@
             </div>
         </section>
 
+        <section id="about" class="about">
+            <div class="container about-box">
+                <div class="about-visual">
+                    <div class="about-icon">⚡</div>
+                </div>
+                <div class="about-content">
+                    <h2>Kimiz?</h2>
+                    <p>NexGen Automations, işletmelerin tekrarlayan ve zaman alan görevlerini yapay zeka destekli sistemlerle otomatikleştiren mühendislik odaklı bir otomasyon stüdyosudur.</p>
+                    <p>Her projeye sıfırdan, işletmenin gerçek ihtiyacına göre tasarlanmış bir mühendislik problemi gibi yaklaşırız — hazır şablon değil, size özel çalışan bir sistem kurarız.</p>
+                    <div class="about-stats">
+                        <div class="about-stat">
+                            <div class="about-stat-num">7+</div>
+                            <div class="about-stat-label">Otomasyon Kategorisi</div>
+                        </div>
+                        <div class="about-stat">
+                            <div class="about-stat-num">7/24</div>
+                            <div class="about-stat-label">Çalışan Sistemler</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="results" class="results">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Örnek Sonuçlar</h2>
+                    <p>Benzer bir işletme için kurduğumuz bir otomasyonun yarattığı etki.</p>
+                </div>
+                <div class="results-grid">
+                    <div class="result-card reveal">
+                        <span class="example-tag">Örnek Sonuç</span>
+                        <div class="result-stats">
+                            <div class="stat">
+                                <div class="stat-num">18<span>sa/hafta</span></div>
+                                <div class="stat-label">Kazanılan Zaman</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-num">%63</div>
+                                <div class="stat-label">Daha Hızlı Yanıt Süresi</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-num">3<span>ay</span></div>
+                                <div class="stat-label">Yatırımın Geri Dönüşü</div>
+                            </div>
+                        </div>
+                        <p class="result-desc">E-ticaret odaklı bir müşteri için kurduğumuz akıllı chatbot ve e-posta otomasyonu, destek ekibinin haftada 18 saatini geri kazandırdı ve yanıt sürelerini %63 hızlandırdı.</p>
+                        <div class="result-quote">
+                            <p>"Manuel olarak yaptığımız işlerin büyük kısmını otomatikleştirdik. Ekibimiz artık tekrarlayan görevler yerine büyümeye odaklanıyor."</p>
+                            <span class="result-author">— Örnek Müşteri, E-ticaret Sektörü</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="roi" class="roi">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Ne Kadar Zaman Kaybediyorsunuz?</h2>
+                    <p>İki soruyu cevaplayın, manuel işlerin yıllık size maliyetini görün.</p>
+                </div>
+                <div class="roi-box reveal">
+                    <div class="roi-inputs">
+                        <div class="roi-field">
+                            <label for="roi-hours">Haftada manuel işlere kaç saat ayırıyorsunuz?</label>
+                            <input type="range" id="roi-hours" min="1" max="60" value="10">
+                            <div class="roi-field-value"><span id="roi-hours-value">10</span> <span class="roi-hours-unit">sa/hafta</span></div>
+                        </div>
+                        <div class="roi-field">
+                            <label for="roi-rate">Bu sürenin saatlik maliyeti (₺)?</label>
+                            <input type="range" id="roi-rate" min="100" max="2000" step="50" value="500">
+                            <div class="roi-field-value"><span id="roi-rate-value">500</span>₺<span class="roi-per-hour">/sa</span></div>
+                        </div>
+                    </div>
+                    <div class="roi-results">
+                        <div class="roi-result-card">
+                            <div class="roi-result-label">Aylık Kayıp</div>
+                            <div class="roi-result-value" id="roi-monthly">₺0</div>
+                        </div>
+                        <div class="roi-result-card highlight">
+                            <div class="roi-result-label">Yıllık Kayıp</div>
+                            <div class="roi-result-value" id="roi-yearly">₺0</div>
+                        </div>
+                    </div>
+                    <p class="roi-note">Bu, otomasyon ile geri kazanabileceğiniz zamanın ve bütçenin tahmini değeridir.</p>
+                    <a href="#contact" class="btn btn-primary full">Bu Zamanı Geri Kazanın</a>
+                </div>
+            </div>
+        </section>
+
         <section id="pricing" class="pricing">
             <div class="container">
                 <div class="section-header">
@@ -134,7 +240,7 @@
                     <div class="pricing-grid">
                         <div class="pricing-card">
                             <div class="plan">Başlangıç Paketi</div>
-                            <div class="price" data-monthly="₺4.999" data-yearly="₺3.999">₺4.999<span>/ay</span></div>
+                            <div class="price" data-monthly="₺2.499" data-yearly="₺1.999">₺2.499<span>/ay</span></div>
                             <ul class="features">
                                 <li>AI Asistan & Chatbot</li>
                                 <li>Haftalık Raporlama</li>
@@ -145,7 +251,7 @@
                         <div class="pricing-card featured">
                             <div class="popular-badge">En Çok Tercih Edilen</div>
                             <div class="plan">Premium Özel Paket</div>
-                            <div class="price" data-monthly="₺20.000" data-yearly="₺16.000">₺20.000<span>/ay</span>
+                            <div class="price" data-monthly="₺10.000" data-yearly="₺8.000">₺10.000<span>/ay</span>
                             </div>
                             <ul class="features">
                                 <li>İstediğiniz 4 Otomasyon</li>
@@ -164,39 +270,106 @@
 
                         <div class="automation-selector">
                             <div class="checkbox-item">
-                                <input type="checkbox" id="check-ai" data-price="3500" checked>
-                                <label for="check-ai">Kişisel AI Asistanı <span>+₺3.500/ay</span></label>
+                                <input type="checkbox" id="check-ai" data-price="1750" checked>
+                                <label for="check-ai">Kişisel AI Asistanı <span>+₺1.750/ay</span></label>
                             </div>
                             <div class="checkbox-item">
-                                <input type="checkbox" id="check-bot" data-price="2000" checked>
-                                <label for="check-bot">Akıllı Chatbotlar <span>+₺2.000/ay</span></label>
+                                <input type="checkbox" id="check-bot" data-price="1000" checked>
+                                <label for="check-bot">Akıllı Chatbotlar <span>+₺1.000/ay</span></label>
                             </div>
                             <div class="checkbox-item">
-                                <input type="checkbox" id="check-yt" data-price="4500">
-                                <label for="check-yt">YouTube Otomasyonu <span>+₺4.500/ay</span></label>
+                                <input type="checkbox" id="check-yt" data-price="2250">
+                                <label for="check-yt">YouTube Otomasyonu <span>+₺2.250/ay</span></label>
                             </div>
                             <div class="checkbox-item">
-                                <input type="checkbox" id="check-sentiment" data-price="2500">
-                                <label for="check-sentiment">Geri Bildirim Analizi <span>+₺2.500/ay</span></label>
+                                <input type="checkbox" id="check-sentiment" data-price="1250">
+                                <label for="check-sentiment">Geri Bildirim Analizi <span>+₺1.250/ay</span></label>
                             </div>
                             <div class="checkbox-item">
-                                <input type="checkbox" id="check-research" data-price="3500">
-                                <label for="check-research">AI Web Araştırmacısı <span>+₺3.500/ay</span></label>
+                                <input type="checkbox" id="check-research" data-price="1750">
+                                <label for="check-research">AI Web Araştırmacısı <span>+₺1.750/ay</span></label>
                             </div>
                             <div class="checkbox-item">
-                                <input type="checkbox" id="check-social" data-price="2000">
-                                <label for="check-social">Sosyal Medya Otomasyonu <span>+₺2.000/ay</span></label>
+                                <input type="checkbox" id="check-social" data-price="1000">
+                                <label for="check-social">Sosyal Medya Otomasyonu <span>+₺1.000/ay</span></label>
                             </div>
                             <div class="checkbox-item">
-                                <input type="checkbox" id="check-email" data-price="1800">
-                                <label for="check-email">E-posta Otomasyonu <span>+₺1.800/ay</span></label>
+                                <input type="checkbox" id="check-email" data-price="900">
+                                <label for="check-email">E-posta Otomasyonu <span>+₺900/ay</span></label>
                             </div>
                         </div>
 
                         <div class="total-calc">
                             <div class="total-label">Tahmini Toplam</div>
-                            <div id="dynamic-total" class="total-price">₺3.500<span>/ay</span></div>
+                            <div id="dynamic-total" class="total-price">₺2.750<span>/ay</span></div>
                             <a href="#contact" class="btn btn-primary full">Teklif Al</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- US launch offer (shown only in EN) -->
+                <div class="us-pricing-offer">
+                    <div class="us-offer-card reveal">
+                        <div class="popular-badge">Limited-Time Launch Offer</div>
+                        <h3>Full Automation Package</h3>
+                        <p class="us-offer-subtitle">Everything you need to automate your business, one simple plan.</p>
+                        <div class="us-price">
+                            <span class="us-price-intro">$50<span>/mo</span></span>
+                            <span class="us-price-note">for your first 6 months, then $100/mo</span>
+                        </div>
+                        <ul class="features">
+                            <li>Personal AI Assistant & Chatbot</li>
+                            <li>Weekly Performance Reporting</li>
+                            <li>Priority Support</li>
+                            <li>Custom Integrations</li>
+                        </ul>
+                        <a href="#contact" class="btn btn-primary full">Claim This Offer</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="faq" class="faq">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Sıkça Sorulan Sorular</h2>
+                    <p>Aklına gelen ilk sorular muhtemelen burada.</p>
+                </div>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <button type="button" class="faq-question" aria-expanded="false">
+                            <span>Uzun dönem bir sözleşme imzalamam gerekiyor mu?</span>
+                            <span class="faq-icon">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Hayır. Uzun dönem bir sözleşme yok, istediğiniz zaman iptal edebilirsiniz. İptal sonrası sistemleriniz mevcut faturalandırma döneminin sonuna kadar çalışmaya devam eder.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button type="button" class="faq-question" aria-expanded="false">
+                            <span>Kurulum ne kadar sürer?</span>
+                            <span class="faq-icon">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Kurulum süresi projenin kapsamına göre değişir, genelde 1-3 hafta arasında sürer. Görüşme sonrası size net bir zaman çizelgesi paylaşırız.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button type="button" class="faq-question" aria-expanded="false">
+                            <span>Mevcut araçlarımla (CRM, e-posta, takvim vb.) entegre olur mu?</span>
+                            <span class="faq-icon">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Genellikle evet. Otomasyonları, kullandığınız mevcut araçlara entegre şekilde tasarlıyoruz; hangi araçları kullandığınızı görüşme sırasında öğrenip ona göre planlıyoruz.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button type="button" class="faq-question" aria-expanded="false">
+                            <span>Fiyatlar neye göre belirleniyor?</span>
+                            <span class="faq-icon">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Hazır paketlerimiz var, ayrıca yalnızca ihtiyacınız olan otomasyonları seçip kendi paketinizi de oluşturabilirsiniz. Tam özel projeler için görüşme sonrası ayrı bir teklif hazırlarız.</p>
                         </div>
                     </div>
                 </div>
@@ -292,10 +465,16 @@
         <footer>
             <div class="container">
                 <p>&copy; 2026 NexGen Automations. Tüm Hakları Saklıdır.</p>
+                <div class="footer-links">
+                    <a href="/privacy.html">Gizlilik Politikası</a>
+                    <span class="footer-links-sep">·</span>
+                    <a href="/terms.html">Hizmet Şartları</a>
+                </div>
             </div>
         </footer>
     </div>
     <script src="/assets/meeting-picker.js" defer></script>
+    <script src="/assets/custom.js" defer></script>
     <script>
         (function () {
             const toggle = document.getElementById("nav-toggle");
