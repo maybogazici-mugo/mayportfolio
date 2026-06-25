@@ -53,9 +53,9 @@
 
 const translations = {
   tr: {
-    metaTitle: "NexGen Automations | Geleceği Otomatize Edin",
+    metaTitle: "NexGen Automations | Yapay Zeka & İş Otomasyonu | Chatbot, YouTube, E-posta",
     metaDescription:
-      "Kişisel yapay zeka asistanları, chatbotlar ve YouTube otomasyon sistemleri ile işinizi büyütün.",
+      "Yapay zeka ile işinizi otomatize edin. Chatbot, YouTube otomasyonu, e-posta kampanyaları ve akıllı iş akışları. Haftada 18 saat tasarruf edin. Ücretsiz görüşme alın.",
     nav: ["Ana Sayfa", "Hizmetler", "Fiyatlandırma", "İletişim"],
     navCta: "Başlayalım",
     heroBadge: "Sektörün Öncüsü Otomasyon Çözümleri",
@@ -244,9 +244,9 @@ const translations = {
     footerTerms: "Hizmet Şartları",
   },
   en: {
-    metaTitle: "NexGen Automations | Automate the Future",
+    metaTitle: "NexGen Automations | AI & Business Automation | Chatbots, YouTube, Email",
     metaDescription:
-      "Scale your business with personal AI assistants, chatbots, and YouTube automation systems.",
+      "Automate your business with AI. Chatbots, YouTube automation, email campaigns, and smart workflows. Save 18 hours a week. Book a free consultation.",
     nav: ["Home", "Services", "Pricing", "Contact"],
     navCta: "Get Started",
     heroBadge: "Leading Automation Solutions",
